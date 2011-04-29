@@ -38,12 +38,16 @@ library
     Database.MySQL.Simple.Result
     Database.MySQL.Simple.Types
 
+  other-modules:
+    Database.MySQL.Simple.Orphans
+
   build-depends:
     attoparsec >= 0.8.5.3,
     base < 5,
     blaze-builder,
     blaze-textual,
-    bytestring >= 0.9 && < 1.0,
+    bytestring >= 0.9,
+    deepseq,
     mysql,
     old-locale,
     text >= 0.11.0.2,

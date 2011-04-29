@@ -2,11 +2,13 @@ module Database.MySQL.Simple
     (
       execute
     , query
+    , query_
     , formatQuery
     ) where
 
 import Control.Applicative
 import Data.Int (Int64)
+import Control.DeepSeq
 import Control.Monad.Fix
 import Blaze.ByteString.Builder
 import qualified Data.ByteString.Char8 as B
@@ -44,6 +46,15 @@ execute conn template qs = do
 query :: (QueryParams q, QueryResults r) => Connection -> Query -> q -> IO [r]
 query conn template qs = do
   Base.query conn =<< formatQuery conn template qs
+  finishQuery conn
+  
+query_ :: (QueryResults r) => Connection -> Query -> IO [r]
+query_ conn (Query q) = do
+  Base.query conn q
+  finishQuery conn
+
+finishQuery :: (QueryResults r) => Connection -> IO [r]
+finishQuery conn = do
   r <- Base.storeResult conn
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
@@ -54,7 +65,8 @@ query conn template qs = do
         row <- Base.fetchRow r
         case row of
           [] -> return (reverse acc)
-          _  -> loop (convertResults fs row:acc)
+          _  -> let c = convertResults fs row
+                in rnf c `seq` loop (c:acc)
 
 fmtError :: String -> a
 fmtError msg = error $ "Database.MySQL.formatQuery: " ++ msg

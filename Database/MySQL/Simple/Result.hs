@@ -9,6 +9,8 @@ module Database.MySQL.Simple.Result
 #include "MachDeps.h"
 
 import Data.Typeable
+import Database.MySQL.Simple.Orphans ()
+import Control.DeepSeq (NFData)
 import Control.Applicative
 import Control.Exception
 import Data.ByteString (ByteString)
@@ -44,7 +46,7 @@ data ResultError = Incompatible { errSourceType :: String
 
 instance Exception ResultError
 
-class Result a where
+class (NFData a) => Result a where
     convert :: Field -> Maybe ByteString -> a
 
 instance (Result a) => Result (Maybe a) where

@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Database.MySQL.Simple.Types
     (
       Null(..)
@@ -6,6 +8,7 @@ module Database.MySQL.Simple.Types
     ) where
 
 import Control.Arrow
+import Control.DeepSeq (NFData)
 import Blaze.ByteString.Builder
 import Data.String (IsString(..))
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
@@ -27,4 +30,4 @@ instance IsString Query where
     fromString = Query . toByteString . Utf8.fromString
 
 newtype Only a = Only a
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, NFData)
