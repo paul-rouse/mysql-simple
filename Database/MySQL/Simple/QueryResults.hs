@@ -1,3 +1,14 @@
+-- |
+-- Module:      Database.MySQL.Simpe.QueryResults
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- The 'QueryResults' typeclass, for converting a row of results
+-- returned by a SQL query into a more useful Haskell representation.
+
 module Database.MySQL.Simple.QueryResults
     (
       QueryResults(..)
@@ -10,8 +21,13 @@ import Database.MySQL.Base.Types (Field)
 import Database.MySQL.Simple.Result (ResultError(..), Result(..))
 import Database.MySQL.Simple.Types (Only(..))
 
+-- | A collection type that can be converted from a list of strings.
 class (NFData a) => QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
+    -- ^ Convert values from a row into a Haskell collection.
+    --
+    -- This function will throw an exception if conversion of any
+    -- element of the collection fails.
 
 instance (NFData a, Result a) => QueryResults (Only a) where
     convertResults [fa] [va] = Only (convert fa va)

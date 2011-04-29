@@ -1,3 +1,14 @@
+-- |
+-- Module:      Database.MySQL.Simple.QueryParams
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- The 'QueryParams' typeclass, for rendering a collection of
+-- parameters to a SQL query.
+
 module Database.MySQL.Simple.QueryParams
     (
       QueryParams(..)
@@ -6,8 +17,11 @@ module Database.MySQL.Simple.QueryParams
 import Database.MySQL.Simple.Param (Action(..), Param(..))
 import Database.MySQL.Simple.Types (Only(..))
 
+-- | A collection type that can be turned into a list of rendering
+-- 'Action's.
 class QueryParams a where
     renderParams :: a -> [Action]
+    -- ^ Render a collection of values.
 
 instance QueryParams () where
     renderParams _ = []

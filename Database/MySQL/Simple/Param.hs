@@ -1,4 +1,14 @@
-{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, OverloadedStrings #-}
+
+-- |
+-- Module:      Database.MySQL.Simple.Param
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- The 'Param' typeclass, for rendering a parameter to a SQL query.
 
 module Database.MySQL.Simple.Param
     (
@@ -16,6 +26,7 @@ import Data.Time.Calendar (Day, showGregorian)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (TimeOfDay)
+import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Simple.Types (Null)
 import System.Locale (defaultTimeLocale)
@@ -26,11 +37,27 @@ import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
 
-data Action = Plain Builder
-            | Escape ByteString
+-- | How to render an element when substituting it into a query.
+data Action =
+    Plain Builder
+    -- ^ Render without escaping or quoting. Use for non-text types
+    -- such as numbers, when you are /certain/ that they will not
+    -- introduce formatting vulnerabilities via use of characters such
+    -- as spaces or \"@'@\".
+  | Escape ByteString
+    -- ^ Escape and enclose in quotes before substituting. Use for all
+    -- text-like types, and anything else that may contain unsafe
+    -- characters when rendered.
+    deriving (Typeable)
 
+instance Show Action where
+    show (Plain b)  = "Plain " ++ show (toByteString b)
+    show (Escape b) = "Escape " ++ show b
+
+-- | A type that may be used as a single parameter to a SQL query.
 class Param a where
     render :: a -> Action
+    -- ^ Prepare a value for substitution into a query string.
 
 instance Param Action where
     render a = a
@@ -138,6 +165,9 @@ instance Param TimeOfDay where
     render = Plain . inQuotes . Utf8.fromString . show
     {-# INLINE render #-}
 
+-- | Surround a string with single-quote characters: \"@'@\"
+--
+-- This function /does not/ perform any other escaping.
 inQuotes :: Builder -> Builder
 inQuotes b = quote `mappend` b `mappend` quote
   where quote = Utf8.fromChar '\''

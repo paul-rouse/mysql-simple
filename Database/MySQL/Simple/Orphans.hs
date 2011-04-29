@@ -1,6 +1,17 @@
 {-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- |
+-- Module:      Database.MySQL.Orphans
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- Orphan instances of frequently used typeclasses for types that
+-- really should have them.
+
 module Database.MySQL.Simple.Orphans () where
 
 import Control.DeepSeq (NFData(..))

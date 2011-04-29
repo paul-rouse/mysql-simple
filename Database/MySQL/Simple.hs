@@ -1,10 +1,23 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
+-- |
+-- Module:      Database.MySQL.Simple
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- A mid-level client library for the MySQL database, aimed at ease of
+-- use and high performance.
+
 module Database.MySQL.Simple
     (
       FormatError(fmtMessage, fmtQuery, fmtParams)
     , Only(..)
+    , Query
     , execute
+    , execute_
     , query
     , query_
     , formatQuery
@@ -53,6 +66,15 @@ formatQuery conn q@(Query template) qs
 execute :: (QueryParams q) => Connection -> Query -> q -> IO Int64
 execute conn template qs = do
   Base.query conn =<< formatQuery conn template qs
+  finishExecute conn
+
+execute_ :: Connection -> Query -> IO Int64
+execute_ conn (Query stmt) = do
+  Base.query conn stmt
+  finishExecute conn
+
+finishExecute :: Connection -> IO Int64
+finishExecute conn = do
   ncols <- Base.fieldCount (Left conn)
   if ncols /= 0
     then error "execute: executed a select!"

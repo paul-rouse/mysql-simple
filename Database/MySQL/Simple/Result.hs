@@ -1,5 +1,16 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances #-}
 
+-- |
+-- Module:      Database.MySQL.Simpe.QueryResults
+-- Copyright:   (c) 2011 MailRank, Inc.
+-- License:     BSD3
+-- Maintainer:  Bryan O'Sullivan <bos@mailrank.com>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- The 'Result' typeclass, for converting a single value in a row
+-- returned by a SQL query into a more useful Haskell representation.
+
 module Database.MySQL.Simple.Result
     (
       Result(..)
@@ -33,21 +44,32 @@ import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
 
-data ResultError = Incompatible { errSourceType :: String
-                                , errDestType :: String
+-- | This exception is thrown if conversion from a SQL value to a
+-- Haskell value fails.
+data ResultError = Incompatible { errSQLType :: String
+                                , errHaskellType :: String
                                 , errMessage :: String }
-                 | UnexpectedNull { errSourceType :: String
-                                  , errDestType :: String
+                 -- ^ The SQL and Haskell types are not compatible.
+                 | UnexpectedNull { errSQLType :: String
+                                  , errHaskellType :: String
                                   , errMessage :: String }
-                 | ConversionFailed { errSourceType :: String
-                                    , errDestType :: String
+                 -- ^ A SQL @NULL@ was encountered when the Haskell
+                 -- type did not permit it.
+                 | ConversionFailed { errSQLType :: String
+                                    , errHaskellType :: String
                                     , errMessage :: String }
+                 -- ^ The SQL value could not be parsed, or could not
+                 -- be represented as a valid Haskell value.
                    deriving (Eq, Show, Typeable)
 
 instance Exception ResultError
 
+-- | A type that may be converted from a SQL type.
 class (NFData a) => Result a where
     convert :: Field -> Maybe ByteString -> a
+    -- ^ Convert a SQL value to a Haskell value.
+    --
+    -- Throws a 'ResultError' if conversion fails.
 
 instance (Result a) => Result (Maybe a) where
     convert _ Nothing = Nothing
