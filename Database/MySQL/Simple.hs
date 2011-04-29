@@ -6,20 +6,20 @@ module Database.MySQL.Simple
     , formatQuery
     ) where
 
-import Control.Applicative
-import Data.Int (Int64)
-import Control.DeepSeq
-import Control.Monad.Fix
-import Blaze.ByteString.Builder
-import qualified Data.ByteString.Char8 as B
+import Blaze.ByteString.Builder (fromByteString, toByteString)
+import Control.Applicative ((<$>), pure)
+import Control.DeepSeq (NFData(..))
+import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
-import Data.Monoid
+import Data.Int (Int64)
+import Data.Monoid (mappend, mempty)
 import Database.MySQL.Base (Connection)
+import Database.MySQL.Simple.Param (Action(..), inQuotes)
+import Database.MySQL.Simple.QueryParams (QueryParams(..))
+import Database.MySQL.Simple.QueryResults (QueryResults(..))
+import Database.MySQL.Simple.Types (Query(..))
+import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
-import Database.MySQL.Simple.Param
-import Database.MySQL.Simple.QueryParams
-import Database.MySQL.Simple.QueryResults
-import Database.MySQL.Simple.Types
 
 formatQuery :: QueryParams q => Connection -> Query -> q -> IO ByteString
 formatQuery conn (Query template) qs

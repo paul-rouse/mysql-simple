@@ -3,8 +3,8 @@ module Database.MySQL.Simple.QueryParams
       QueryParams(..)
     ) where
 
-import Database.MySQL.Simple.Param
-import Database.MySQL.Simple.Types
+import Database.MySQL.Simple.Param (Action(..), Param(..))
+import Database.MySQL.Simple.Types (Only(..))
 
 class QueryParams a where
     renderParams :: a -> [Action]

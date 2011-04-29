@@ -4,10 +4,11 @@ module Database.MySQL.Simple.QueryResults
     ) where
 
 import Control.DeepSeq (NFData(..))
+import Control.Exception (throw)
 import Data.ByteString (ByteString)
-import Database.MySQL.Base.Types
-import Database.MySQL.Simple.Result
-import Database.MySQL.Simple.Types
+import Database.MySQL.Base.Types (Field)
+import Database.MySQL.Simple.Result (ResultError(..), Result(..))
+import Database.MySQL.Simple.Types (Only(..))
 
 class (NFData a) => QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
@@ -94,4 +95,7 @@ instance (NFData a, NFData b, NFData c, NFData d, NFData e, NFData f,
     convertResults fs vs  = convError fs vs
 
 convError :: [Field] -> [Maybe ByteString] -> a
-convError = error "convError"
+convError fs vs = throw $ ConversionFailed
+                  (show (length fs) ++ " columns left in result")
+                  (show (length vs) ++ " values left in row")
+                  "mismatch between number of columns to convert"

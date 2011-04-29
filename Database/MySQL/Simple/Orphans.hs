@@ -3,12 +3,12 @@
 
 module Database.MySQL.Simple.Orphans () where
 
+import Control.DeepSeq (NFData(..))
 import Data.Time.Calendar (Day(..))
 import Data.Time.Clock (UTCTime(..))
 import Data.Time.LocalTime (TimeOfDay(..))
 import qualified Data.ByteString.Internal as SB
 import qualified Data.ByteString.Lazy.Internal as LB
-import Control.DeepSeq (NFData(..))
 
 instance NFData SB.ByteString where
     rnf (SB.PS _ _ _) = ()

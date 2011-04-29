@@ -10,14 +10,14 @@ module Database.MySQL.Simple.Param
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
 import Blaze.Text (integral, double, float)
 import Data.ByteString (ByteString)
-import Data.Monoid (mappend)
-import Database.MySQL.Simple.Types (Null)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Monoid (mappend)
 import Data.Time.Calendar (Day, showGregorian)
 import Data.Time.Clock (UTCTime)
-import Data.Time.LocalTime (TimeOfDay)
 import Data.Time.Format (formatTime)
+import Data.Time.LocalTime (TimeOfDay)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
+import Database.MySQL.Simple.Types (Null)
 import System.Locale (defaultTimeLocale)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB

@@ -8,30 +8,30 @@ module Database.MySQL.Simple.Result
 
 #include "MachDeps.h"
 
-import Data.Typeable
-import Database.MySQL.Simple.Orphans ()
+import Control.Applicative ((<$>), (<*>), (<*), pure)
 import Control.DeepSeq (NFData)
-import Control.Applicative
-import Control.Exception
-import Data.ByteString (ByteString)
-import Database.MySQL.Base.Types
+import Control.Exception (Exception, throw)
 import Data.Attoparsec.Char8 hiding (Result)
-import Data.Bits
+import Data.Bits ((.&.), (.|.), shiftL)
+import Data.ByteString (ByteString)
+import Data.Int (Int8, Int16, Int32, Int64)
+import Data.List (foldl')
+import Data.Ratio (Ratio)
 import Data.Time.Calendar (Day, fromGregorian)
 import Data.Time.Clock (UTCTime)
+import Data.Time.Format (parseTime)
 import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
-import System.Locale (defaultTimeLocale)
-import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Data.Ratio (Ratio)
-import Data.List
+import Database.MySQL.Base.Types (Field(..), Type(..))
+import Database.MySQL.Simple.Orphans ()
+import System.Locale (defaultTimeLocale)
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
-import Data.Time.Format (parseTime)
 
 data ResultError = Incompatible { errSourceType :: String
                                 , errDestType :: String
