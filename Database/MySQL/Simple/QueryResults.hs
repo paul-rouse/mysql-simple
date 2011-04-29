@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 -- |
 -- Module:      Database.MySQL.Simpe.QueryResults
 -- Copyright:   (c) 2011 MailRank, Inc.
@@ -12,6 +14,7 @@
 module Database.MySQL.Simple.QueryResults
     (
       QueryResults(..)
+    , convertError
     ) where
 
 import Control.Exception (throw)
@@ -21,83 +24,122 @@ import Database.MySQL.Simple.Result (ResultError(..), Result(..))
 import Database.MySQL.Simple.Types (Only(..))
 
 -- | A collection type that can be converted from a list of strings.
+--
+-- Instances should use the 'convert' method of the 'Result' class
+-- to perform conversion of each element of the collection.
+--
+-- This example instance demonstrates how to convert a two-column row
+-- into a Haskell pair. Each field in the metadata is paired up with
+-- each value from the row, and the two are passed to 'convert'.
+--
+-- @
+-- instance ('Result' a, 'Result' b) => 'QueryResults' (a,b) where
+--     'convertResults' [fa,fb] [va,vb] = (a,b)
+--         where !a = 'convert' fa va
+--               !b = 'convert' fb vb
+--     'convertResults' fs vs  = 'convertError' fs vs
+-- @
+--
+-- Notice that this instance evaluates each element to WHNF before
+-- constructing the pair. By doing this, we guarantee two important
+-- properties:
+--
+-- * Keep resource usage under control by preventing the construction
+--   of potentially long-lived thunks.
+--
+-- * Ensure that any 'ResultError' that might arise is thrown
+--   immediately, rather than some place later in application code
+--   that cannot handle it.
 class QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
     -- ^ Convert values from a row into a Haskell collection.
     --
-    -- This function will throw an exception if conversion of any
-    -- element of the collection fails.
+    -- This function will throw a 'ResultError' if conversion of the
+    -- collection fails.
 
 instance (Result a) => QueryResults (Only a) where
-    convertResults [fa] [va] = Only (convert fa va)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa] [va] = Only a
+        where !a = convert fa va
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b) => QueryResults (a,b) where
-    convertResults [fa,fb] [va,vb] = (convert fa va, convert fb vb)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa,fb] [va,vb] = (a,b)
+        where !a = convert fa va; !b = convert fb vb
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c) => QueryResults (a,b,c) where
-    convertResults [fa,fb,fc] [va,vb,vc] =
-        (convert fa va, convert fb vb, convert fc vc)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa,fb,fc] [va,vb,vc] = (a,b,c)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d) =>
     QueryResults (a,b,c,d) where
-    convertResults [fa,fb,fc,fd] [va,vb,vc,vd] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa,fb,fc,fd] [va,vb,vc,vd] = (a,b,c,d)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e) =>
     QueryResults (a,b,c,d,e) where
-    convertResults [fa,fb,fc,fd,fe] [va,vb,vc,vd,ve] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa,fb,fc,fd,fe] [va,vb,vc,vd,ve] = (a,b,c,d,e)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f) =>
     QueryResults (a,b,c,d,e,f) where
-    convertResults [fa,fb,fc,fd,fe,ff] [va,vb,vc,vd,ve,vf] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve, convert ff vf)
-    convertResults fs vs  = convError fs vs
+    convertResults [fa,fb,fc,fd,fe,ff] [va,vb,vc,vd,ve,vf] = (a,b,c,d,e,f)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g) =>
     QueryResults (a,b,c,d,e,f,g) where
     convertResults [fa,fb,fc,fd,fe,ff,fg] [va,vb,vc,vd,ve,vf,vg] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve, convert ff vf, convert fg vg)
-    convertResults fs vs  = convError fs vs
+        (a,b,c,d,e,f,g)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h) =>
     QueryResults (a,b,c,d,e,f,g,h) where
     convertResults [fa,fb,fc,fd,fe,ff,fg,fh] [va,vb,vc,vd,ve,vf,vg,vh] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve, convert ff vf, convert fg vg, convert fh vh)
-    convertResults fs vs  = convError fs vs
+        (a,b,c,d,e,f,g,h)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h, Result i) =>
     QueryResults (a,b,c,d,e,f,g,h,i) where
     convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi] [va,vb,vc,vd,ve,vf,vg,vh,vi] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve, convert ff vf, convert fg vg, convert fh vh,
-         convert fi vi)
-    convertResults fs vs  = convError fs vs
+        (a,b,c,d,e,f,g,h,i)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+    convertResults fs vs  = convertError fs vs
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h, Result i, Result j) =>
     QueryResults (a,b,c,d,e,f,g,h,i,j) where
     convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj]
                    [va,vb,vc,vd,ve,vf,vg,vh,vi,vj] =
-        (convert fa va, convert fb vb, convert fc vc, convert fd vd,
-         convert fe ve, convert ff vf, convert fg vg, convert fh vh,
-         convert fi vi, convert fj vj)
-    convertResults fs vs  = convError fs vs
+        (a,b,c,d,e,f,g,h,i,j)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj
+    convertResults fs vs  = convertError fs vs
 
-convError :: [Field] -> [Maybe ByteString] -> a
-convError fs vs = throw $ ConversionFailed
+-- | Throw a 'ConversionFailed' exception, indicating a mismatch
+-- between the number of columns in the 'Field' and the number in the
+-- row.  (This should never happen.)
+convertError :: [Field] -> [Maybe ByteString] -> a
+convertError fs vs = throw $ ConversionFailed
                   (show (length fs) ++ " columns left in result")
                   (show (length vs) ++ " values left in row")
                   "mismatch between number of columns to convert"

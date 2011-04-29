@@ -19,12 +19,12 @@ module Database.MySQL.Simple.Types
 
 import Blaze.ByteString.Builder
 import Control.Arrow
-import Control.DeepSeq (NFData)
 import Data.ByteString (ByteString)
 import Data.String (IsString(..))
 import Data.Typeable (Typeable)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 
+-- | A placeholder for the SQL @NULL@ value.
 data Null = Null
           deriving (Read, Show, Typeable)
 
@@ -69,4 +69,4 @@ instance IsString Query where
 --
 -- @query \"select x from scores where x > ?\" ('Only' (42::Int))@
 newtype Only a = Only a
-    deriving (Eq, Ord, Read, Show, NFData, Typeable, Functor)
+    deriving (Eq, Ord, Read, Show, Typeable, Functor)

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE BangPatterns, DeriveDataTypeable #-}
 
 -- |
 -- Module:      Database.MySQL.Simple
@@ -25,7 +25,6 @@ module Database.MySQL.Simple
 
 import Blaze.ByteString.Builder (fromByteString, toByteString)
 import Control.Applicative ((<$>), pure)
-import Control.DeepSeq (NFData(..))
 import Control.Exception (Exception, throw)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
@@ -80,18 +79,18 @@ finishExecute conn = do
     then error "execute: executed a select!"
     else Base.affectedRows conn
   
-query :: (QueryParams q, QueryResults r, NFData r)
+query :: (QueryParams q, QueryResults r)
          => Connection -> Query -> q -> IO [r]
 query conn template qs = do
   Base.query conn =<< formatQuery conn template qs
   finishQuery conn
   
-query_ :: (QueryResults r, NFData r) => Connection -> Query -> IO [r]
+query_ :: (QueryResults r) => Connection -> Query -> IO [r]
 query_ conn (Query q) = do
   Base.query conn q
   finishQuery conn
 
-finishQuery :: (QueryResults r, NFData r) => Connection -> IO [r]
+finishQuery :: (QueryResults r) => Connection -> IO [r]
 finishQuery conn = do
   r <- Base.storeResult conn
   ncols <- Base.fieldCount (Right r)
@@ -103,8 +102,8 @@ finishQuery conn = do
         row <- Base.fetchRow r
         case row of
           [] -> return (reverse acc)
-          _  -> let c = convertResults fs row
-                in rnf c `seq` loop (c:acc)
+          _  -> let !c = convertResults fs row
+                in loop (c:acc)
 
 fmtError :: String -> Query -> [Action] -> a
 fmtError msg q xs = throw FormatError {

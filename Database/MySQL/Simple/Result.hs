@@ -34,7 +34,6 @@ import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Base.Types (Field(..), Type(..))
-import Database.MySQL.Simple.Orphans ()
 import System.Locale (defaultTimeLocale)
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as B8
@@ -58,7 +57,9 @@ data ResultError = Incompatible { errSQLType :: String
                                     , errHaskellType :: String
                                     , errMessage :: String }
                  -- ^ The SQL value could not be parsed, or could not
-                 -- be represented as a valid Haskell value.
+                 -- be represented as a valid Haskell value, or an
+                 -- unexpected low-level error occurred (e.g. mismatch
+                 -- between metadata and actual data in a row).
                    deriving (Eq, Show, Typeable)
 
 instance Exception ResultError
