@@ -80,17 +80,18 @@ finishExecute conn = do
     then error "execute: executed a select!"
     else Base.affectedRows conn
   
-query :: (QueryParams q, QueryResults r) => Connection -> Query -> q -> IO [r]
+query :: (QueryParams q, QueryResults r, NFData r)
+         => Connection -> Query -> q -> IO [r]
 query conn template qs = do
   Base.query conn =<< formatQuery conn template qs
   finishQuery conn
   
-query_ :: (QueryResults r) => Connection -> Query -> IO [r]
+query_ :: (QueryResults r, NFData r) => Connection -> Query -> IO [r]
 query_ conn (Query q) = do
   Base.query conn q
   finishQuery conn
 
-finishQuery :: (QueryResults r) => Connection -> IO [r]
+finishQuery :: (QueryResults r, NFData r) => Connection -> IO [r]
 finishQuery conn = do
   r <- Base.storeResult conn
   ncols <- Base.fieldCount (Right r)

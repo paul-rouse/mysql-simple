@@ -20,7 +20,6 @@ module Database.MySQL.Simple.Result
 #include "MachDeps.h"
 
 import Control.Applicative ((<$>), (<*>), (<*), pure)
-import Control.DeepSeq (NFData)
 import Control.Exception (Exception, throw)
 import Data.Attoparsec.Char8 hiding (Result)
 import Data.Bits ((.&.), (.|.), shiftL)
@@ -65,7 +64,7 @@ data ResultError = Incompatible { errSQLType :: String
 instance Exception ResultError
 
 -- | A type that may be converted from a SQL type.
-class (NFData a) => Result a where
+class Result a where
     convert :: Field -> Maybe ByteString -> a
     -- ^ Convert a SQL value to a Haskell value.
     --
