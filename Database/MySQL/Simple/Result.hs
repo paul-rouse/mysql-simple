@@ -42,8 +42,8 @@ import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
 
--- | This exception is thrown if conversion from a SQL value to a
--- Haskell value fails.
+-- | Exception thrown if conversion from a SQL value to a Haskell
+-- value fails.
 data ResultError = Incompatible { errSQLType :: String
                                 , errHaskellType :: String
                                 , errMessage :: String }
