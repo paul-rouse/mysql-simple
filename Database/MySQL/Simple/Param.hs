@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFunctor, FlexibleInstances,
+    OverloadedStrings #-}
 
 -- |
 -- Module:      Database.MySQL.Simple.Param
@@ -18,9 +19,11 @@ module Database.MySQL.Simple.Param
     ) where
 
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
+import Blaze.ByteString.Builder.Char8 (fromChar)
 import Blaze.Text (integral, double, float)
 import Data.ByteString (ByteString)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.List (intersperse)
 import Data.Monoid (mappend)
 import Data.Time.Calendar (Day, showGregorian)
 import Data.Time.Clock (UTCTime)
@@ -28,7 +31,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Database.MySQL.Simple.Types (Null)
+import Database.MySQL.Simple.Types (In(..), Null)
 import System.Locale (defaultTimeLocale)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB
@@ -48,11 +51,14 @@ data Action =
     -- ^ Escape and enclose in quotes before substituting. Use for all
     -- text-like types, and anything else that may contain unsafe
     -- characters when rendered.
+  | Many [Action]
+    -- ^ Concatenate a series of rendering actions.
     deriving (Typeable)
 
 instance Show Action where
     show (Plain b)  = "Plain " ++ show (toByteString b)
     show (Escape b) = "Escape " ++ show b
+    show (Many b)   = "Many " ++ show b
 
 -- | A type that may be used as a single parameter to a SQL query.
 class Param a where
@@ -67,6 +73,13 @@ instance (Param a) => Param (Maybe a) where
     render Nothing  = renderNull
     render (Just a) = render a
     {-# INLINE render #-}
+
+instance (Param a) => Param (In [a]) where
+    render (In []) = Plain $ fromByteString "(null)"
+    render (In xs) = Many $
+        Plain (fromChar '(') :
+        (intersperse (Plain (fromChar ',')) . map render $ xs) ++
+        [Plain (fromChar ')')]
 
 renderNull :: Action
 renderNull = Plain (fromByteString "null")

@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, OverloadedStrings #-}
 
 -- |
 -- Module:      Database.MySQL.Simpe.QueryResults
@@ -19,7 +19,8 @@ module Database.MySQL.Simple.QueryResults
 
 import Control.Exception (throw)
 import Data.ByteString (ByteString)
-import Database.MySQL.Base.Types (Field)
+import qualified Data.ByteString.Char8 as B
+import Database.MySQL.Base.Types (Field(fieldType))
 import Database.MySQL.Simple.Result (ResultError(..), Result(..))
 import Database.MySQL.Simple.Types (Only(..))
 
@@ -60,38 +61,38 @@ class QueryResults a where
 instance (Result a) => QueryResults (Only a) where
     convertResults [fa] [va] = Only a
         where !a = convert fa va
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 1
 
 instance (Result a, Result b) => QueryResults (a,b) where
     convertResults [fa,fb] [va,vb] = (a,b)
         where !a = convert fa va; !b = convert fb vb
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 2
 
 instance (Result a, Result b, Result c) => QueryResults (a,b,c) where
     convertResults [fa,fb,fc] [va,vb,vc] = (a,b,c)
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 3
 
 instance (Result a, Result b, Result c, Result d) =>
     QueryResults (a,b,c,d) where
     convertResults [fa,fb,fc,fd] [va,vb,vc,vd] = (a,b,c,d)
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 4
 
 instance (Result a, Result b, Result c, Result d, Result e) =>
     QueryResults (a,b,c,d,e) where
     convertResults [fa,fb,fc,fd,fe] [va,vb,vc,vd,ve] = (a,b,c,d,e)
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd; !e = convert fe ve
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 5
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f) =>
     QueryResults (a,b,c,d,e,f) where
     convertResults [fa,fb,fc,fd,fe,ff] [va,vb,vc,vd,ve,vf] = (a,b,c,d,e,f)
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 6
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g) =>
@@ -101,7 +102,7 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
               !g = convert fg vg
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 7
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h) =>
@@ -111,7 +112,7 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
               !g = convert fg vg; !h = convert fh vh
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 8
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h, Result i) =>
@@ -121,7 +122,7 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
         where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
               !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
               !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 9
 
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h, Result i, Result j) =>
@@ -133,13 +134,19 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
               !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
               !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
               !j = convert fj vj
-    convertResults fs vs  = convertError fs vs
+    convertResults fs vs  = convertError fs vs 10
 
 -- | Throw a 'ConversionFailed' exception, indicating a mismatch
--- between the number of columns in the 'Field' and the number in the
--- row.  (This should never happen.)
-convertError :: [Field] -> [Maybe ByteString] -> a
-convertError fs vs = throw $ ConversionFailed
-                  (show (length fs) ++ " columns left in result")
-                  (show (length vs) ++ " values left in row")
-                  "mismatch between number of columns to convert"
+-- between the number of columns in the 'Field' and row, and the
+-- number in the collection to be converted to.
+convertError :: [Field] -> [Maybe ByteString] -> Int -> a
+convertError fs vs n = throw $ ConversionFailed
+    (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
+                                                  (map (fmap ellipsis) vs)))
+    (show n ++ " slots in target type")
+    "mismatch between number of columns to convert and number in target type"
+
+ellipsis :: ByteString -> ByteString
+ellipsis bs
+    | B.length bs > 15 = B.take 10 bs `B.append` "[...]"
+    | otherwise        = bs

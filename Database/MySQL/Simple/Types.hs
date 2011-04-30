@@ -14,15 +14,18 @@ module Database.MySQL.Simple.Types
     (
       Null(..)
     , Only(..)
+    , In(..)
     , Query(..)
     ) where
 
-import Blaze.ByteString.Builder
-import Control.Arrow
+import Blaze.ByteString.Builder (toByteString)
+import Control.Arrow (first)
 import Data.ByteString (ByteString)
+import Data.Monoid (Monoid(..))
 import Data.String (IsString(..))
 import Data.Typeable (Typeable)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
+import qualified Data.ByteString as B
 
 -- | A placeholder for the SQL @NULL@ value.
 data Null = Null
@@ -60,6 +63,11 @@ instance Read Query where
 instance IsString Query where
     fromString = Query . toByteString . Utf8.fromString
 
+instance Monoid Query where
+    mempty = Query B.empty
+    mappend (Query a) (Query b) = Query (B.append a b)
+    {-# INLINE mappend #-}
+
 -- | A single-value collection.
 --
 -- This can be handy if you need to supply a single parameter to a SQL
@@ -68,5 +76,16 @@ instance IsString Query where
 -- Example:
 --
 -- @query \"select x from scores where x > ?\" ('Only' (42::Int))@
-newtype Only a = Only a
+newtype Only a = Only {
+      fromOnly :: a
+    } deriving (Eq, Ord, Read, Show, Typeable, Functor)
+
+-- | Wrap a list of values for use in an @IN@ clause.  Replaces a
+-- single \"@?@\" character with a parenthesized list of rendered
+-- values.
+--
+-- Example:
+--
+-- > query "select * from whatever where id in ?" (In [3,4,5])
+newtype In a = In a
     deriving (Eq, Ord, Read, Show, Typeable, Functor)

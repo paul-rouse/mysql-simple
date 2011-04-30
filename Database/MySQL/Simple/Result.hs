@@ -10,6 +10,13 @@
 --
 -- The 'Result' typeclass, for converting a single value in a row
 -- returned by a SQL query into a more useful Haskell representation.
+--
+-- A Haskell numeric type is considered to be compatible with all
+-- MySQL numeric types that are less accurate than it. For instance,
+-- the Haskell 'Double' type is compatible with the MySQL 'Long' type
+-- because it can represent a 'Long' exactly. On the other hand, since
+-- a 'Double' might lose precision if representing a 'LongLong', the
+-- two are /not/ considered compatible.
 
 module Database.MySQL.Simple.Result
     (
@@ -113,15 +120,17 @@ instance Result Word64 where
 
 instance Result Float where
     convert = atto ok ((fromRational . toRational) <$> double)
-        where ok = mkCompats [Float,Double,Decimal,NewDecimal]
+        where ok = mkCompats [Float,Double,Decimal,NewDecimal,Tiny,Short,Int24]
 
 instance Result Double where
     convert = atto ok double
-        where ok = mkCompats [Float,Double,Decimal,NewDecimal]
+        where ok = mkCompats [Float,Double,Decimal,NewDecimal,Tiny,Short,Int24,
+                              Long]
 
 instance Result (Ratio Integer) where
     convert = atto ok rational
-        where ok = mkCompats [Float,Double,Decimal,NewDecimal]
+        where ok = mkCompats [Float,Double,Decimal,NewDecimal,Tiny,Short,Int24,
+                              Long,LongLong]
 
 instance Result SB.ByteString where
     convert f = doConvert f okText $ id

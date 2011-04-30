@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, DeriveDataTypeable #-}
+{-# LANGUAGE BangPatterns, DeriveDataTypeable, OverloadedStrings #-}
 
 -- |
 -- Module:      Database.MySQL.Simple
@@ -14,7 +14,10 @@
 module Database.MySQL.Simple
     (
     -- * Types
-      Query
+      Base.ConnectInfo(..)
+    , Connection
+    , Query
+    , In(..)
     , Only(..)
     -- ** Exceptions
     , FormatError(fmtMessage, fmtQuery, fmtParams)
@@ -30,6 +33,7 @@ module Database.MySQL.Simple
     -- * Statements that do not return results
     , execute
     , execute_
+    , executeMany
     , Base.insertID
     -- * Transaction handling
     , withTransaction
@@ -37,23 +41,27 @@ module Database.MySQL.Simple
     , Base.commit
     , Base.rollback
     -- * Helper functions
+    , formatMany
     , formatQuery
     ) where
 
-import Blaze.ByteString.Builder (fromByteString, toByteString)
+import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
+import Blaze.ByteString.Builder.Char8 (fromChar)
 import Control.Applicative ((<$>), pure)
 import Control.Exception (Exception, onException, throw)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
-import Data.Monoid (mappend)
+import Data.List (intersperse)
+import Data.Monoid (mappend, mconcat)
 import Data.Typeable (Typeable)
 import Database.MySQL.Base (Connection)
 import Database.MySQL.Simple.Param (Action(..), inQuotes)
 import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
 import Database.MySQL.Simple.Result (ResultError(..))
-import Database.MySQL.Simple.Types (Only(..), Query(..))
+import Database.MySQL.Simple.Types (In(..), Only(..), Query(..))
+import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
 
@@ -82,19 +90,43 @@ instance Exception QueryError
 -- String parameters are escaped according to the character set in use
 -- on the 'Connection'.
 --
--- Exceptions that may be thrown:
---
--- * 'FormatError': the query string could not be formatted correctly.
---
--- * 'QueryError': the result contains a non-zero number of columns
---   (i.e. you should be using 'query' instead of 'execute').
+-- Throws 'FormatError' if the query string could not be formatted
+-- correctly.
 formatQuery :: QueryParams q => Connection -> Query -> q -> IO ByteString
 formatQuery conn q@(Query template) qs
     | null xs && '?' `B.notElem` template = return template
-    | otherwise = toByteString . zipParams (split template) <$> mapM sub xs
+    | otherwise = toByteString <$> buildQuery conn q template xs
   where xs = renderParams qs
-        sub (Plain b)  = pure b
+
+-- | Format a query string with a variable number of rows.
+--
+-- The query string must contain exactly one substitution group,
+-- identified by the SQL keyword \"@VALUES@\" (case insensitive)
+-- followed by an \"@(@\" character, a series of one or more \"@?@\"
+-- characters separated by commas, and a \"@)@\" character. White
+-- space in a substitution group is permitted.
+--
+-- Throws 'FormatError' if the query string could not be formatted
+-- correctly.
+formatMany :: (QueryParams q) => Connection -> Query -> [q] -> IO ByteString
+formatMany _ q [] = fmtError "no rows supplied" q []
+formatMany conn q@(Query template) qs = do
+  case match re template [] of
+    Just [_,before,qbits,after] -> do
+      bs <- mapM (buildQuery conn q qbits . renderParams) qs
+      return . toByteString . mconcat $ fromByteString before :
+                                        intersperse (fromChar ',') bs ++
+                                        [fromByteString after]
+    _ -> error "foo"
+  where
+   re = compile "^([^?]+\\bvalues\\s*)(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))(.*)$"
+        [caseless]
+
+buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
+buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
+  where sub (Plain b)  = pure b
         sub (Escape s) = (inQuotes . fromByteString) <$> Base.escape conn s
+        sub (Many ys)  = mconcat <$> mapM sub ys
         split s = fromByteString h : if B.null t then [] else split (B.tail t)
             where (h,t) = B.break (=='?') s
         zipParams (t:ts) (p:ps) = t `mappend` p `mappend` zipParams ts ps
@@ -108,7 +140,7 @@ formatQuery conn q@(Query template) qs
 --
 -- Returns the number of rows affected.
 --
--- Throws 'FormatError' if the string could not be formatted correctly.
+-- Throws 'FormatError' if the query could not be formatted correctly.
 execute :: (QueryParams q) => Connection -> Query -> q -> IO Int64
 execute conn template qs = do
   Base.query conn =<< formatQuery conn template qs
@@ -118,6 +150,18 @@ execute conn template qs = do
 execute_ :: Connection -> Query -> IO Int64
 execute_ conn q@(Query stmt) = do
   Base.query conn stmt
+  finishExecute q conn
+
+-- | Execute a multi-row @INSERT@, @UPDATE@, or other SQL query that is not
+-- expected to return results.
+--
+-- Returns the number of rows affected.
+--
+-- Throws 'FormatError' if the query could not be formatted correctly.
+executeMany :: (QueryParams q) => Connection -> Query -> [q] -> IO Int64
+executeMany _ _ [] = return 0
+executeMany conn q qs = do
+  Base.query conn =<< formatMany conn q qs
   finishExecute q conn
 
 finishExecute :: Query -> Connection -> IO Int64
@@ -193,3 +237,4 @@ fmtError msg q xs = throw FormatError {
                     }
   where twiddle (Plain b)  = toByteString b
         twiddle (Escape s) = s
+        twiddle (Many ys)  = B.concat (map twiddle ys)
