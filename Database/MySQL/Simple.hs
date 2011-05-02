@@ -13,6 +13,27 @@
 
 module Database.MySQL.Simple
     (
+    -- * Writing queries
+    -- $use
+
+    -- ** The Query type
+    -- $querytype
+
+    -- ** Parameter substitution
+    -- $subst
+
+    -- *** Type inference
+    -- $inference
+
+    -- ** Substituting a single parameter
+    -- $only
+
+    -- ** Representing a list of values
+    -- $in
+
+    -- ** Modifying multiple rows at once
+    -- $many
+
     -- * Types
       Base.ConnectInfo(..)
     , Connection
@@ -87,6 +108,9 @@ instance Exception QueryError
 
 -- | Format a query string.
 --
+-- This function is exposed to help with debugging and logging. Do not
+-- use it to prepare queries for execution.
+--
 -- String parameters are escaped according to the character set in use
 -- on the 'Connection'.
 --
@@ -99,6 +123,9 @@ formatQuery conn q@(Query template) qs
   where xs = renderParams qs
 
 -- | Format a query string with a variable number of rows.
+--
+-- This function is exposed to help with debugging and logging. Do not
+-- use it to prepare queries for execution.
 --
 -- The query string must contain exactly one substitution group,
 -- identified by the SQL keyword \"@VALUES@\" (case insensitive)
@@ -119,7 +146,9 @@ formatMany conn q@(Query template) qs = do
                                         [fromByteString after]
     _ -> error "foo"
   where
-   re = compile "^([^?]+\\bvalues\\s*)(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))(.*)$"
+   re = compile "^([^?]+\\bvalues\\s*)\
+                 \(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))\
+                 \([^?]*)$"
         [caseless]
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
@@ -238,3 +267,177 @@ fmtError msg q xs = throw FormatError {
   where twiddle (Plain b)  = toByteString b
         twiddle (Escape s) = s
         twiddle (Many ys)  = B.concat (map twiddle ys)
+
+-- $use
+--
+-- SQL-based applications are somewhat notorious for their
+-- susceptibility to attacks through the injection of maliciously
+-- crafted data. The primary reason for widespread vulnerability to
+-- SQL injections is that many applications are sloppy in handling
+-- user data when constructing SQL queries.
+--
+-- This library provides a 'Query' type and a parameter substitution
+-- facility to address both ease of use and security.
+
+-- $querytype
+-- 
+-- A 'Query' is a @newtype@-wrapped 'ByteString'. It intentionally
+-- exposes a tiny API that is not compatible with the 'ByteString'
+-- API; this makes it difficult to construct queries from fragments of
+-- strings.  The 'query' and 'execute' functions require queries to be
+-- of type 'Query'.
+--
+-- To most easily construct a query, enable GHC's @OverloadedStrings@
+-- language extension and write your query as a normal literal string.
+--
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- >
+-- > import Database.MySQL.Simple
+-- >
+-- > hello = do
+-- >   conn <- connect defaultConnectInfo
+-- >   query conn "select 2 + 2"
+--
+-- A 'Query' value does not represent the actual query that will be
+-- executed, but is a template for constructing the final query.
+
+-- $subst
+--
+-- Since applications need to be able to construct queries with
+-- parameters that change, this library provides a query substitution
+-- capability.
+--
+-- The 'Query' template accepted by 'query' and 'execute' can contain
+-- any number of \"@?@\" characters.  Both 'query' and 'execute'
+-- accept a third argument, typically a tuple. When constructing the
+-- real query to execute, these functions replace the first \"@?@\" in
+-- the template with the first element of the tuple, the second
+-- \"@?@\" with the second element, and so on. If necessary, each
+-- tuple element will be quoted and escaped prior to substitution;
+-- this defeats the single most common injection vector for malicious
+-- data.
+--
+-- For example, given the following 'Query' template:
+--
+-- > select * from user where first_name = ? and age > ?
+--
+-- And a tuple of this form:
+--
+-- > ("Boris" :: String, 37 :: Int)
+--
+-- The query to be executed will look like this after substitution:
+--
+-- > select * from user where first_name = 'Boris' and age > 37
+--
+-- If there is a mismatch between the number of \"@?@\" characters in
+-- your template and the number of elements in your tuple, a
+-- 'FormatError' will be thrown.
+--
+-- Note that the substitution functions do not attempt to parse or
+-- validate your query. It's up to you to write syntactically valid
+-- SQL, and to ensure that each \"@?@\" in your query template is
+-- matched with the right tuple element.
+
+-- $inference
+--
+-- Automated type inference means that you will often be able to avoid
+-- supplying explicit type signatures for the elements of a tuple.
+-- However, sometimes the compiler will not be able to infer your
+-- types. Consider a care where you write a numeric literal in a
+-- parameter tuple:
+--
+-- > query conn "select ? + ?" (40,2)
+--
+-- The above query will be rejected by the compiler, because it does
+-- not know the specific numeric types of the literals @40@ and @2@.
+-- This is easily fixed:
+--
+-- > query conn "select ? + ?" (40 :: Double, 2 :: Double)
+--
+-- The same kind of problem can arise with string literals if you have
+-- the @OverloadedStrings@ language extension enabled.  Again, just
+-- use an explicit type signature if this happens.
+
+-- $only
+--
+-- Haskell lacks a single-element tuple type, so if you have just one
+-- value you want substituted into a query, what should you do?
+--
+-- The obvious approach would appear to be something like this:
+--
+-- > instance (Param a) => QueryParam a where
+-- >     ...
+--
+-- Unfortunately, this wreaks havoc with type inference, so we take a
+-- different tack. To represent a single value @val@ as a parameter, write
+-- a singleton list @[val]@, use 'Just' @val@, or use 'Only' @val@.
+--
+-- Here's an example using a singleton list:
+--
+-- > execute conn "insert into users (first_name) values (?)"
+-- >              ["Nuala"]
+
+-- $in
+--
+-- Suppose you want to write a query using an @IN@ clause:
+--
+-- > select * from users where first_name in ('Anna', 'Boris', 'Carla')
+--
+-- In such cases, it's common for both the elements and length of the
+-- list after the @IN@ keyword to vary from query to query.
+--
+-- To address this case, use the 'In' type wrapper, and use a single
+-- \"@?@\" character to represent the list.  Omit the parentheses
+-- around the list; these will be added for you.
+--
+-- Here's an example:
+--
+-- > query conn "select * from users where first_name in ?" $
+-- >       In ["Anna", "Boris", "Carla"]
+--
+-- If your 'In'-wrapped list is empty, the string @\"(null)\"@ will be
+-- substituted instead, to ensure that your clause remains
+-- syntactically valid.
+
+-- $many
+--
+-- If you know that you have many rows of data to insert into a table,
+-- it is much more efficient to perform all the insertions in a single
+-- multi-row @INSERT@ statement than individually.
+--
+-- The 'executeMany' function is intended specifically for helping
+-- with multi-row @INSERT@ and @UPDATE@ statements. Its rules for
+-- query substitution are different than those for 'execute'.
+--
+-- What 'executeMany' searches for in your 'Query' template is a
+-- single substring of the form:
+--
+-- > values (?,?,?)
+--
+-- The rules are as follows:
+--
+-- * The keyword @VALUES@ is matched case insensitively.
+--
+-- * There must be no other \"@?@\" characters anywhere in your
+--   template.
+--
+-- * There must one or more \"@?@\" in the parentheses.
+--
+-- * Extra white space is fine.
+--
+-- The last argument to 'executeMany' is a list of parameter
+-- tuples. These will be substituted into the query where the @(?,?)@
+-- string appears, in a form suitable for use in a multi-row @INSERT@
+-- or @UPDATE@..
+--
+-- Here is an example:
+--
+-- > executeMany conn
+-- >   "insert into users (first_name,last_name) values (?,?)"
+-- >   [("Boris","Karloff"),("Ed","Wood")]
+--
+-- The query that will be executed here will look like this
+-- (reformatted for tidiness):
+--
+-- > insert into users (first_name,last_name) values
+-- >   ('Boris','Karloff'),('Ed','Wood')
