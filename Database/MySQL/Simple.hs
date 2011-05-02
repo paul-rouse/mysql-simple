@@ -263,7 +263,7 @@ finishQuery q conn = do
 -- 'Base.rollback', then the exception will be rethrown.
 withTransaction :: Connection -> IO a -> IO a
 withTransaction conn act = do
-  execute_ conn "start transaction"
+  _ <- execute_ conn "start transaction"
   r <- act `onException` Base.rollback conn
   Base.commit conn
   return r
