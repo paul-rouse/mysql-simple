@@ -26,13 +26,22 @@ module Database.MySQL.Simple
     -- $inference
 
     -- ** Substituting a single parameter
-    -- $only
+    -- $only_param
 
     -- ** Representing a list of values
     -- $in
 
     -- ** Modifying multiple rows at once
     -- $many
+
+    -- * Extracting results
+    -- $result
+
+    -- ** Handling null values
+    -- $null
+
+    -- ** Type conversions
+    -- $types
 
     -- * Types
       Base.ConnectInfo(..)
@@ -244,16 +253,17 @@ finishQuery q conn = do
 
 -- | Execute an action inside a SQL transaction.
 --
--- You are assumed to have started the transaction yourself.
+-- This function initiates a transaction with a \"@begin
+-- transaction@\" statement, then executes the supplied action.  If
+-- the action succeeds, the transaction will be completed with
+-- 'Base.commit' before this function returns.
 --
--- If your action succeeds, the transaction will be 'Base.commit'ted
--- before this function returns.
---
--- If your action throws any exception (not just a SQL exception), the
--- transaction will be rolled back 'Base.rollback' before the
--- exception is propagated.
+-- If the action throws /any/ kind of exception (not just a
+-- MySQL-related exception), the transaction will be rolled back using
+-- 'Base.rollback', then the exception will be rethrown.
 withTransaction :: Connection -> IO a -> IO a
 withTransaction conn act = do
+  execute_ conn "start transaction"
   r <- act `onException` Base.rollback conn
   Base.commit conn
   return r
@@ -358,7 +368,7 @@ fmtError msg q xs = throw FormatError {
 -- the @OverloadedStrings@ language extension enabled.  Again, just
 -- use an explicit type signature if this happens.
 
--- $only
+-- $only_param
 --
 -- Haskell lacks a single-element tuple type, so if you have just one
 -- value you want substituted into a query, what should you do?
@@ -428,7 +438,7 @@ fmtError msg q xs = throw FormatError {
 -- The last argument to 'executeMany' is a list of parameter
 -- tuples. These will be substituted into the query where the @(?,?)@
 -- string appears, in a form suitable for use in a multi-row @INSERT@
--- or @UPDATE@..
+-- or @UPDATE@.
 --
 -- Here is an example:
 --
@@ -441,3 +451,79 @@ fmtError msg q xs = throw FormatError {
 --
 -- > insert into users (first_name,last_name) values
 -- >   ('Boris','Karloff'),('Ed','Wood')
+
+-- $result
+--
+-- The 'query' and 'query_' functions return a list of values in the
+-- 'QueryResults' typeclass. This class performs automatic extraction
+-- and type conversion of rows from a query result.
+--
+-- Here is a simple example of how to extract results:
+--
+-- > import qualified Data.Text as Text
+-- >
+-- > xs <- query_ conn "select name,age from users"
+-- > forM_ xs $ \(name,age) ->
+-- >   putStrLn $ Text.unpack name ++ " is " ++ show (age :: Int)
+--
+-- Notice two important details about this code:
+--
+-- * The number of columns we ask for in the query template must
+--   exactly match the number of elements we specify in a row of the
+--   result tuple.  If they do not match, a 'ResultError' exception
+--   will be thrown.
+--
+-- * Sometimes, the compiler needs our help in specifying types. It
+--   can infer that @name@ must be a 'Text', due to our use of the
+--   @unpack@ function. However, we have to tell it the type of @age@,
+--   as it has no other information to determine the exact type.
+
+-- $null
+--
+-- The type of a result tuple will look something like this:
+--
+-- > (Text, Int, Int)
+--
+-- Although SQL can accommodate @NULL@ as a value for any of these
+-- types, Haskell cannot. If your result contains columns that may be
+-- @NULL@, be sure that you use 'Maybe' in those positions of of your
+-- tuple.
+--
+-- > (Text, Maybe Int, Int)
+--
+-- If 'query' encounters a @NULL@ in a row where the corresponding
+-- Haskell type is not 'Maybe', it will throw a 'ResultError'
+-- exception.
+
+-- $only_result
+--
+-- To specify that a query returns a single-column result, use the
+-- 'Only' type.
+--
+-- > xs <- query_ conn "select id from users"
+-- > forM_ xs $ \(Only dbid) -> {- ... -}
+
+-- $types
+--
+-- Conversion of SQL values to Haskell values is somewhat
+-- permissive. Here are the rules.
+--
+-- * For numeric types, any Haskell type that can accurately represent
+--   all values of the given MySQL type is considered \"compatible\".
+--   For instance, you can always extract a MySQL @TINYINT@ column to
+--   a Haskell 'Int'.  The Haskell 'Float' type can accurately
+--   represent MySQL integer types of size up to @INT24@, so it is
+--   considered compatble with those types.
+--
+-- * A numeric compatibility check is based only on the type of a
+--   column, /not/ on its values. For instance, a MySQL @LONG_LONG@
+--   column will be considered incompatible with a Haskell 'Int8',
+--   even if it contains the value @1@.
+--
+-- * If a numeric incompatibility is found, 'query' will throw a
+--   'ResultError'.
+--
+-- * The 'String' and 'Text' types are assumed to be encoded as
+--   UTF-8. If you use some other encoding, decoding may fail or give
+--   wrong results. In such cases, write a @newtype@ wrapper and a
+--   custom 'Result' instance to handle your encoding.

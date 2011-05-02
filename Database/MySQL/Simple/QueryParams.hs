@@ -8,6 +8,9 @@
 --
 -- The 'QueryParams' typeclass, for rendering a collection of
 -- parameters to a SQL query.
+--
+-- Predefined instances are provided for tuples containing up to ten
+-- elements.
 
 module Database.MySQL.Simple.QueryParams
     (
@@ -19,6 +22,9 @@ import Database.MySQL.Simple.Types (Only(..))
 
 -- | A collection type that can be turned into a list of rendering
 -- 'Action's.
+--
+-- Instances should use the 'render' method of the 'Param' class
+-- to perform conversion of each element of the collection.
 class QueryParams a where
     renderParams :: a -> [Action]
     -- ^ Render a collection of values.

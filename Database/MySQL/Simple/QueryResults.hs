@@ -10,6 +10,9 @@
 --
 -- The 'QueryResults' typeclass, for converting a row of results
 -- returned by a SQL query into a more useful Haskell representation.
+--
+-- Predefined instances are provided for tuples containing up to ten
+-- elements.
 
 module Database.MySQL.Simple.QueryResults
     (
@@ -51,6 +54,20 @@ import Database.MySQL.Simple.Types (Only(..))
 -- * Ensure that any 'ResultError' that might arise is thrown
 --   immediately, rather than some place later in application code
 --   that cannot handle it.
+--
+-- You can also declare Haskell types of your own to be instances of
+-- 'QueryResults'.
+--
+-- @
+--data User { firstName :: String, lastName :: String }
+--
+--instance 'QueryResults' User where
+--    'convertResults' [fa,fb] [va,vb] = User a b
+--        where !a = 'convert' fa va
+--              !b = 'convert' fb vb
+--    'convertResults' fs vs  = 'convertError' fs vs
+-- @
+
 class QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
     -- ^ Convert values from a row into a Haskell collection.

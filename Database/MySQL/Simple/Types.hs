@@ -50,6 +50,10 @@ instance Eq Null where
 -- >
 -- > q :: Query
 -- > q = "select ?"
+--
+-- The underlying type is a 'ByteString', and literal Haskell strings
+-- that contain Unicode characters will be correctly transformed to
+-- UTF-8.
 newtype Query = Query {
       fromQuery :: ByteString
     } deriving (Eq, Ord, Typeable)
@@ -68,14 +72,19 @@ instance Monoid Query where
     mappend (Query a) (Query b) = Query (B.append a b)
     {-# INLINE mappend #-}
 
--- | A single-value collection.
+-- | A single-value \"collection\".
 --
--- This can be handy if you need to supply a single parameter to a SQL
--- query.
+-- This is useful if you need to supply a single parameter to a SQL
+-- query, or extract a single column from a SQL result.
 --
--- Example:
+-- Parameter example:
 --
--- @query \"select x from scores where x > ?\" ('Only' (42::Int))@
+-- @query c \"select x from scores where x > ?\" ('Only' (42::Int))@
+--
+-- Result example:
+--
+-- @xs <- query_ c \"select id from users\"
+--forM_ xs $ \\('Only' id) -> {- ... -}@
 newtype Only a = Only {
       fromOnly :: a
     } deriving (Eq, Ord, Read, Show, Typeable, Functor)
@@ -86,6 +95,6 @@ newtype Only a = Only {
 --
 -- Example:
 --
--- > query "select * from whatever where id in ?" (In [3,4,5])
+-- > query c "select * from whatever where id in ?" (In [3,4,5])
 newtype In a = In a
     deriving (Eq, Ord, Read, Show, Typeable, Functor)
