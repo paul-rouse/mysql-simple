@@ -83,7 +83,7 @@ module Database.MySQL.Simple
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Control.Applicative ((<$>), pure)
-import Control.Exception (Exception, onException, throw, throwIO)
+import Control.Exception (Exception, bracket, onException, throw, throwIO)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
@@ -326,8 +326,7 @@ finishFold conn q z0 f = withResult (Base.useResult conn) q $ \r fs ->
       _  -> (f z $! convertResults fs row) >>= loop
 
 withResult :: (IO Result) -> Query -> (Result -> [Field] -> IO a) -> IO a
-withResult fetchResult q act = do
-  r <- fetchResult
+withResult fetchResult q act = bracket fetchResult Base.freeResult $ \r -> do
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
     then throwIO $ QueryError "query resulted in zero-column result" q
