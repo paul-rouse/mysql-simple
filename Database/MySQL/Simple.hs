@@ -63,6 +63,8 @@ module Database.MySQL.Simple
     -- * Queries that stream results
     , fold
     , fold_
+    , forEach
+    , forEach_
     -- * Statements that do not return results
     , execute
     , execute_
@@ -218,7 +220,8 @@ finishExecute conn q = do
 -- results. All results are retrieved and converted before this
 -- function returns.
 --
--- For large results, consider using 'fold' instead.
+-- When processing large results, this function will consume a lot of
+-- client-side memory.  Consider using 'fold' instead.
 --
 -- Exceptions that may be thrown:
 --
@@ -241,14 +244,16 @@ query_ conn q@(Query que) = do
   finishQuery conn q
 
 -- | Perform a @SELECT@ or other SQL query that is expected to return
--- results. Results are streamed incrementally from the server.
+-- results. Results are streamed incrementally from the server, and
+-- consumed via a left fold.
 --
--- The stream consumer must not block, and must be efficient. If the
--- consumer is slow, server resources will be tied up, and other
--- clients may not be able to update the tables from which the results
--- are being streamed.
+-- The result consumer must be carefully written to execute
+-- quickly. If the consumer is slow, server resources will be tied up,
+-- and other clients may not be able to update the tables from which
+-- the results are being streamed.
 --
--- For small results, consider using 'query' instead.
+-- When dealing with small results, it may be simpler (and perhaps
+-- faster) to use 'query' instead.
 --
 -- This fold is /not/ strict. The stream consumer is responsible for
 -- forcing the evaluation of its result to avoid space leaks.
@@ -262,17 +267,45 @@ query_ conn q@(Query que) = do
 --
 -- * 'ResultError': result conversion failed.
 fold :: (QueryParams q, QueryResults r) =>
-        Connection -> Query -> a -> (a -> r -> IO a) -> q -> IO a
-fold conn template z f qs = do
+        Connection
+     -> Query                   -- ^ Query template.
+     -> q                       -- ^ Query parameters.
+     -> a                       -- ^ Initial state for result consumer.
+     -> (a -> r -> IO a)        -- ^ Result consumer.
+     -> IO a
+fold conn template qs z f = do
   Base.query conn =<< formatQuery conn template qs
   finishFold conn template z f
 
 -- | A version of 'fold' that does not perform query substitution.
 fold_ :: (QueryResults r) =>
-           Connection -> Query -> a -> (a -> r -> IO a) -> IO a
+         Connection
+      -> Query                  -- ^ Query.
+      -> a                      -- ^ Initial state for result consumer.
+      -> (a -> r -> IO a)       -- ^ Result consumer.
+      -> IO a
 fold_ conn q@(Query que) z f = do
   Base.query conn que
   finishFold conn q z f
+
+-- | A version of 'fold' that does not transform a state value.
+forEach :: (QueryParams q, QueryResults r) =>
+           Connection
+        -> Query                -- ^ Query template.
+        -> q                    -- ^ Query parameters.
+        -> (r -> IO ())         -- ^ Result consumer.
+        -> IO ()
+forEach conn template qs = fold conn template qs () . const
+{-# INLINE forEach #-}
+
+-- | A version of 'forEach' that does not perform query substitution.
+forEach_ :: (QueryResults r) =>
+            Connection
+         -> Query                -- ^ Query template.
+         -> (r -> IO ())         -- ^ Result consumer.
+         -> IO ()
+forEach_ conn template = fold_ conn template () . const
+{-# INLINE forEach_ #-}
 
 finishQuery :: (QueryResults r) => Connection -> Query -> IO [r]
 finishQuery conn q = withResult (Base.storeResult conn) q $ \r fs ->
