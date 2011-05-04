@@ -182,13 +182,13 @@ buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
 execute :: (QueryParams q) => Connection -> Query -> q -> IO Int64
 execute conn template qs = do
   Base.query conn =<< formatQuery conn template qs
-  finishExecute template conn
+  finishExecute conn template
 
 -- | A version of 'execute' that does not perform query substitution.
 execute_ :: Connection -> Query -> IO Int64
 execute_ conn q@(Query stmt) = do
   Base.query conn stmt
-  finishExecute q conn
+  finishExecute conn q
 
 -- | Execute a multi-row @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.
@@ -200,10 +200,10 @@ executeMany :: (QueryParams q) => Connection -> Query -> [q] -> IO Int64
 executeMany _ _ [] = return 0
 executeMany conn q qs = do
   Base.query conn =<< formatMany conn q qs
-  finishExecute q conn
+  finishExecute conn q
 
-finishExecute :: Query -> Connection -> IO Int64
-finishExecute q conn = do
+finishExecute :: Connection -> Query -> IO Int64
+finishExecute conn q = do
   ncols <- Base.fieldCount (Left conn)
   if ncols /= 0
     then throw $ QueryError ("execute resulted in " ++ show ncols ++
@@ -228,16 +228,16 @@ query :: (QueryParams q, QueryResults r)
          => Connection -> Query -> q -> IO [r]
 query conn template qs = do
   Base.query conn =<< formatQuery conn template qs
-  finishQuery template conn
+  finishQuery conn template
 
 -- | A version of 'query' that does not perform query substitution.
 query_ :: (QueryResults r) => Connection -> Query -> IO [r]
 query_ conn q@(Query que) = do
   Base.query conn que
-  finishQuery q conn
+  finishQuery conn q
 
-finishQuery :: (QueryResults r) => Query -> Connection -> IO [r]
-finishQuery q conn = do
+finishQuery :: (QueryResults r) => Connection -> Query -> IO [r]
+finishQuery conn q = do
   r <- Base.storeResult conn
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
