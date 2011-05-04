@@ -60,6 +60,9 @@ module Database.MySQL.Simple
     -- * Queries that return results
     , query
     , query_
+    -- * Queries that stream results
+    , fold
+    , fold_
     -- * Statements that do not return results
     , execute
     , execute_
@@ -78,14 +81,15 @@ module Database.MySQL.Simple
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Control.Applicative ((<$>), pure)
-import Control.Exception (Exception, onException, throw)
+import Control.Exception (Exception, onException, throw, throwIO)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend, mconcat)
 import Data.Typeable (Typeable)
-import Database.MySQL.Base (Connection)
+import Database.MySQL.Base (Connection, Result)
+import Database.MySQL.Base.Types (Field)
 import Database.MySQL.Simple.Param (Action(..), inQuotes)
 import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
@@ -206,15 +210,15 @@ finishExecute :: Connection -> Query -> IO Int64
 finishExecute conn q = do
   ncols <- Base.fieldCount (Left conn)
   if ncols /= 0
-    then throw $ QueryError ("execute resulted in " ++ show ncols ++
-                             "-column result") q
+    then throwIO $ QueryError ("execute resulted in " ++ show ncols ++
+                               "-column result") q
     else Base.affectedRows conn
 
 -- | Perform a @SELECT@ or other SQL query that is expected to return
--- results.
+-- results. All results are retrieved and converted before this
+-- function returns.
 --
--- All results are retrieved and converted before this function
--- returns.
+-- For large results, consider using 'fold' instead.
 --
 -- Exceptions that may be thrown:
 --
@@ -236,20 +240,65 @@ query_ conn q@(Query que) = do
   Base.query conn que
   finishQuery conn q
 
+-- | Perform a @SELECT@ or other SQL query that is expected to return
+-- results. Results are streamed incrementally from the server.
+--
+-- The stream consumer must not block, and must be efficient. If the
+-- consumer is slow, server resources will be tied up, and other
+-- clients may not be able to update the tables from which the results
+-- are being streamed.
+--
+-- For small results, consider using 'query' instead.
+--
+-- This fold is /not/ strict. The stream consumer is responsible for
+-- forcing the evaluation of its result to avoid space leaks.
+--
+-- Exceptions that may be thrown:
+--
+-- * 'FormatError': the query string could not be formatted correctly.
+--
+-- * 'QueryError': the result contains no columns (i.e. you should be
+--   using 'execute' instead of 'query').
+--
+-- * 'ResultError': result conversion failed.
+fold :: (QueryParams q, QueryResults r) =>
+        Connection -> Query -> a -> (a -> r -> IO a) -> q -> IO a
+fold conn template z f qs = do
+  Base.query conn =<< formatQuery conn template qs
+  finishFold conn template z f
+
+-- | A version of 'fold' that does not perform query substitution.
+fold_ :: (QueryResults r) =>
+           Connection -> Query -> a -> (a -> r -> IO a) -> IO a
+fold_ conn q@(Query que) z f = do
+  Base.query conn que
+  finishFold conn q z f
+
 finishQuery :: (QueryResults r) => Connection -> Query -> IO [r]
-finishQuery conn q = do
-  r <- Base.storeResult conn
+finishQuery conn q = withResult (Base.storeResult conn) q $ \r fs ->
+  flip fix [] $ \loop acc -> do
+    row <- Base.fetchRow r
+    case row of
+      [] -> return (reverse acc)
+      _  -> let !c = convertResults fs row
+            in loop (c:acc)
+
+finishFold :: (QueryResults r) =>
+                Connection -> Query -> a -> (a -> r -> IO a) -> IO a
+finishFold conn q z0 f = withResult (Base.useResult conn) q $ \r fs ->
+  flip fix z0 $ \loop z -> do
+    row <- Base.fetchRow r
+    case row of
+      [] -> return z
+      _  -> (f z $! convertResults fs row) >>= loop
+
+withResult :: (IO Result) -> Query -> (Result -> [Field] -> IO a) -> IO a
+withResult fetchResult q act = do
+  r <- fetchResult
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
-    then throw $ QueryError "query resulted in zero-column result" q
-    else do
-      fs <- Base.fetchFields r
-      flip fix [] $ \loop acc -> do
-        row <- Base.fetchRow r
-        case row of
-          [] -> return (reverse acc)
-          _  -> let !c = convertResults fs row
-                in loop (c:acc)
+    then throwIO $ QueryError "query resulted in zero-column result" q
+    else act r =<< Base.fetchFields r
 
 -- | Execute an action inside a SQL transaction.
 --
