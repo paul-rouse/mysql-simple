@@ -48,6 +48,7 @@ module Database.MySQL.Simple
     , Connection
     , Query
     , In(..)
+    , Binary(..)
     , Only(..)
     -- ** Exceptions
     , FormatError(fmtMessage, fmtQuery, fmtParams)
@@ -96,7 +97,7 @@ import Database.MySQL.Simple.Param (Action(..), inQuotes)
 import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
 import Database.MySQL.Simple.Result (ResultError(..))
-import Database.MySQL.Simple.Types (In(..), Only(..), Query(..))
+import Database.MySQL.Simple.Types (Binary(..), In(..), Only(..), Query(..))
 import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base

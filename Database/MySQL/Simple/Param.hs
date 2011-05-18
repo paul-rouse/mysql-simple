@@ -18,10 +18,13 @@ module Database.MySQL.Simple.Param
     , inQuotes
     ) where
 
-import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
+import Blaze.ByteString.Builder (Builder, fromByteString, fromLazyByteString,
+                                 toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Blaze.Text (integral, double, float)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base16.Lazy as L16
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend)
@@ -31,7 +34,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Database.MySQL.Simple.Types (In(..), Null)
+import Database.MySQL.Simple.Types (Binary(..), In(..), Null)
 import System.Locale (defaultTimeLocale)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB
@@ -80,6 +83,14 @@ instance (Param a) => Param (In [a]) where
         Plain (fromChar '(') :
         (intersperse (Plain (fromChar ',')) . map render $ xs) ++
         [Plain (fromChar ')')]
+
+instance Param (Binary SB.ByteString) where
+    render (Binary bs) = Plain $ fromByteString "0x" `mappend`
+                                 fromByteString (B16.encode bs)
+
+instance Param (Binary LB.ByteString) where
+    render (Binary bs) = Plain $ fromByteString "0x" `mappend`
+                                 fromLazyByteString (L16.encode bs)
 
 renderNull :: Action
 renderNull = Plain (fromByteString "null")

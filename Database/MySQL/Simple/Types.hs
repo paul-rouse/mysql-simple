@@ -15,6 +15,7 @@ module Database.MySQL.Simple.Types
       Null(..)
     , Only(..)
     , In(..)
+    , Binary(..)
     , Query(..)
     ) where
 
@@ -97,4 +98,8 @@ newtype Only a = Only {
 --
 -- > query c "select * from whatever where id in ?" (In [3,4,5])
 newtype In a = In a
+    deriving (Eq, Ord, Read, Show, Typeable, Functor)
+
+-- | Wrap a mostly-binary string to be escaped in hexadecimal.
+newtype Binary a = Binary a
     deriving (Eq, Ord, Read, Show, Typeable, Functor)
