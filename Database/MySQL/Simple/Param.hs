@@ -90,8 +90,9 @@ instance Param (Binary SB.ByteString) where
                                  fromChar '\''
 
 instance Param (Binary LB.ByteString) where
-    render (Binary bs) = Plain $ fromByteString "0x" `mappend`
-                                 fromLazyByteString (L16.encode bs)
+    render (Binary bs) = Plain $ fromByteString "x'" `mappend`
+                                 fromLazyByteString (L16.encode bs) `mappend`
+                                 fromChar '\''
 
 renderNull :: Action
 renderNull = Plain (fromByteString "null")
