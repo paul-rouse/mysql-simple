@@ -85,8 +85,9 @@ instance (Param a) => Param (In [a]) where
         [Plain (fromChar ')')]
 
 instance Param (Binary SB.ByteString) where
-    render (Binary bs) = Plain $ fromByteString "0x" `mappend`
-                                 fromByteString (B16.encode bs)
+    render (Binary bs) = Plain $ fromByteString "x'" `mappend`
+                                 fromByteString (B16.encode bs) `mappend`
+                                 fromChar '\''
 
 instance Param (Binary LB.ByteString) where
     render (Binary bs) = Plain $ fromByteString "0x" `mappend`
