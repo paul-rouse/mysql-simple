@@ -1,5 +1,5 @@
 name:           mysql-simple
-version:        0.2.2.0
+version:        0.2.2.1
 homepage:       https://github.com/mailrank/mysql-simple
 bug-reports:    https://github.com/mailrank/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
