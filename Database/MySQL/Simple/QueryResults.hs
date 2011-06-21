@@ -161,7 +161,9 @@ convertError :: [Field]
              -> [Maybe ByteString]
              -- ^ Contents of the row to be converted.
              -> Int
-             -- ^ Number of columns expected for conversion.
+             -- ^ Number of columns expected for conversion.  For
+             -- instance, if converting to a 3-tuple, the number to
+             -- provide here would be 3.
              -> a
 convertError fs vs n = throw $ ConversionFailed
     (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
