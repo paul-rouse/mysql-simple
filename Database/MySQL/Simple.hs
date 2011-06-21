@@ -386,9 +386,11 @@ fmtError msg q xs = throw FormatError {
 -- >
 -- > import Database.MySQL.Simple
 -- >
+-- > hello :: IO Int
 -- > hello = do
 -- >   conn <- connect defaultConnectInfo
--- >   query_ conn "select 2 + 2"
+-- >   [Only i] <- query_ conn "select 2 + 2"
+-- >   return i
 --
 -- A 'Query' value does not represent the actual query that will be
 -- executed, but is a template for constructing the final query.
@@ -449,11 +451,27 @@ fmtError msg q xs = throw FormatError {
 -- The same kind of problem can arise with string literals if you have
 -- the @OverloadedStrings@ language extension enabled.  Again, just
 -- use an explicit type signature if this happens.
+--
+-- Finally, remember that the compiler must be able to infer the type
+-- of a query's /results/ as well as its parameters.  We might like
+-- the following example to work:
+--
+-- > print =<< query_ conn "select 2 + 2"
+--
+-- Unfortunately, while a quick glance tells us that the result type
+-- should be a single row containing a single numeric column, the
+-- compiler has no way to infer what the types are.  We can easily fix
+-- this by providing an explicit type annotation:
+--
+-- > xs <- query_ conn "select 2 + 2"
+-- > print (xs :: [Only Int])
+
 
 -- $only_param
 --
 -- Haskell lacks a single-element tuple type, so if you have just one
--- value you want substituted into a query, what should you do?
+-- value you want substituted into a query or a single-column result,
+-- what should you do?
 --
 -- The obvious approach would appear to be something like this:
 --
@@ -461,13 +479,17 @@ fmtError msg q xs = throw FormatError {
 -- >     ...
 --
 -- Unfortunately, this wreaks havoc with type inference, so we take a
--- different tack. To represent a single value @val@ as a parameter, write
--- a singleton list @[val]@, use 'Just' @val@, or use 'Only' @val@.
+-- different tack. To represent a single value @val@ as a parameter,
+-- write a singleton list @[val]@, use 'Just' @val@, or use 'Only'
+-- @val@.
 --
 -- Here's an example using a singleton list:
 --
 -- > execute conn "insert into users (first_name) values (?)"
 -- >              ["Nuala"]
+--
+-- A row of /n/ query results is represented using an /n/-tuple, so
+-- you should use 'Only' to represent a single-column result.
 
 -- $in
 --
