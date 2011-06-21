@@ -41,7 +41,7 @@ import Database.MySQL.Simple.Types (Only(..))
 --     'convertResults' [fa,fb] [va,vb] = (a,b)
 --         where !a = 'convert' fa va
 --               !b = 'convert' fb vb
---     'convertResults' fs vs  = 'convertError' fs vs
+--     'convertResults' fs vs  = 'convertError' fs vs 2
 -- @
 --
 -- Notice that this instance evaluates each element to WHNF before
@@ -156,7 +156,13 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
 -- | Throw a 'ConversionFailed' exception, indicating a mismatch
 -- between the number of columns in the 'Field' and row, and the
 -- number in the collection to be converted to.
-convertError :: [Field] -> [Maybe ByteString] -> Int -> a
+convertError :: [Field]
+             -- ^ Descriptors of fields to be converted.
+             -> [Maybe ByteString]
+             -- ^ Contents of the row to be converted.
+             -> Int
+             -- ^ Number of columns expected for conversion.
+             -> a
 convertError fs vs n = throw $ ConversionFailed
     (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
                                                   (map (fmap ellipsis) vs)))
