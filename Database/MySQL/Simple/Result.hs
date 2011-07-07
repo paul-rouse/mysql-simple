@@ -119,7 +119,7 @@ instance Result Word64 where
     convert = atto ok64 decimal
 
 instance Result Float where
-    convert = atto ok ((fromRational . toRational) <$> double)
+    convert = atto ok (realToFrac <$> double)
         where ok = mkCompats [Float,Double,Decimal,NewDecimal,Tiny,Short,Int24]
 
 instance Result Double where
