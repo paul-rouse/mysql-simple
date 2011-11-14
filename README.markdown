@@ -24,11 +24,11 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/mailrank/mysql-simple/issues).
+[github issue tracker](http://github.com/bos/mysql-simple/issues).
 
-Master [git repository](http://github.com/mailrank/mysql-simple):
+Master [git repository](http://github.com/bos/mysql-simple):
 
-* `git clone git://github.com/mailrank/mysql-simple.git`
+* `git clone git://github.com/bos/mysql-simple.git`
 
 There's also a [Mercurial mirror](http://bitbucket.org/bos/mysql-simple):
 
@@ -39,4 +39,4 @@ There's also a [Mercurial mirror](http://bitbucket.org/bos/mysql-simple):
 # Authors
 
 This library is written and maintained by Bryan O'Sullivan,
-<bos@mailrank.com>.
+<bos@serpentine.com>.
