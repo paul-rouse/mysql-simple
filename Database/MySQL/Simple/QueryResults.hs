@@ -59,13 +59,13 @@ import Database.MySQL.Simple.Types (Only(..))
 -- 'QueryResults'.
 --
 -- @
---data User { firstName :: String, lastName :: String }
+--data User = User { firstName :: String, lastName :: String }
 --
 --instance 'QueryResults' User where
---    'convertResults' [fa,fb] [va,vb] = User a b
+--    'convertResults' [fa,fb] [va,vb] = User <$> a <*> b
 --        where !a = 'convert' fa va
 --              !b = 'convert' fb vb
---    'convertResults' fs vs  = 'convertError' fs vs
+--    'convertResults' fs vs  = 'convertError' fs vs 2
 -- @
 
 class QueryResults a where
