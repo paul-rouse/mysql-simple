@@ -81,9 +81,10 @@ module Database.MySQL.Simple
     , formatQuery
     ) where
 
+import Prelude hiding (take, takeWhile)
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
-import Control.Applicative ((<$>), pure)
+import Control.Applicative
 import Control.Exception (Exception, bracket, onException, throw, throwIO)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
@@ -98,9 +99,9 @@ import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
 import Database.MySQL.Simple.Result (ResultError(..))
 import Database.MySQL.Simple.Types (Binary(..), In(..), Only(..), Query(..))
-import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
+import Data.Attoparsec.Char8 hiding (Result)
 
 -- | Exception thrown if a 'Query' could not be formatted correctly.
 -- This may occur if the number of \'@?@\' characters in the query
@@ -154,18 +155,28 @@ formatQuery conn q@(Query template) qs
 formatMany :: (QueryParams q) => Connection -> Query -> [q] -> IO ByteString
 formatMany _ q [] = fmtError "no rows supplied" q []
 formatMany conn q@(Query template) qs = do
-  case match re template [] of
-    Just [_,before,qbits,after] -> do
+  case parse parser template of
+    Done _ (before,qbits,after) -> do
       bs <- mapM (buildQuery conn q qbits . renderParams) qs
       return . toByteString . mconcat $ fromByteString before :
                                         intersperse (fromChar ',') bs ++
                                         [fromByteString after]
     _ -> error "foo"
   where
-   re = compile "^([^?]+\\bvalues\\s*)\
-                 \(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))\
-                 \([^?]*)$"
-        [caseless]
+    skipWhile1 f = satisfy f *> skipWhile f
+    parser = do
+      -- Skip VALUES keyword
+      skipWhile1 (/= '?') *> take 1 *> stringCI "values" *> skipSpace
+      -- Take (...?
+      before <- char '(' *> takeTill (== '?')
+      -- Skip ?,?,?...
+      skipMany (skipSpace *> char ',' *> skipSpace *> char '?')
+      -- Take )
+      qbits <- takeWhile (== ' ') <* char ')'
+      after <- takeWhile (/= '?')
+      endOfInput
+      return ('(' `B.cons` before, qbits `B.snoc` ')', after)
+
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
 buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
