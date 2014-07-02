@@ -153,6 +153,72 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
               !j = convert fj vj
     convertResults fs vs  = convertError fs vs 10
 
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk] =
+        (a,b,c,d,e,f,g,h,i,j,k)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk
+    convertResults fs vs  = convertError fs vs 11
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl] =
+        (a,b,c,d,e,f,g,h,i,j,k,l)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+    convertResults fs vs  = convertError fs vs 12
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l,
+          Result m) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl,vm] =
+        (a,b,c,d,e,f,g,h,i,j,k,l,m)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+              !m = convert fm vm
+    convertResults fs vs  = convertError fs vs 13
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l,
+          Result m, Result n) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m,n) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl,vm,vn] =
+        (a,b,c,d,e,f,g,h,i,j,k,l,m,n)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+              !m = convert fm vm; !n = convert fn vn
+    convertResults fs vs  = convertError fs vs 14
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l,
+          Result m, Result n, Result o) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl,vm,vn,vo] =
+        (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+              !m = convert fm vm; !n = convert fn vn; !o = convert fo vo
+    convertResults fs vs  = convertError fs vs 15
+
 -- | Throw a 'ConversionFailed' exception, indicating a mismatch
 -- between the number of columns in the 'Field' and row, and the
 -- number in the collection to be converted to.
