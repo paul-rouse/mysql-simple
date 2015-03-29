@@ -1,5 +1,5 @@
 name:           mysql-simple
-version:        0.2.2.5
+version:        0.2.2.6
 homepage:       https://github.com/bos/mysql-simple
 bug-reports:    https://github.com/bos/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
@@ -52,9 +52,9 @@ library
     text >= 0.11.0.2,
     time
 
-  ghc-options: -Wall
-  if impl(ghc >= 6.8)
-    ghc-options: -fwarn-tabs
+  ghc-options: -Wall -fwarn-tabs
+  if impl(ghc >= 7.10)
+    ghc-options: -fno-warn-unused-imports
   if flag(developer)
     ghc-prof-options: -auto-all
     ghc-options: -Werror
