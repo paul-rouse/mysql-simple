@@ -41,13 +41,18 @@ import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Base.Types (Field(..), Type(..))
-import System.Locale (defaultTimeLocale)
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
+
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
+import System.Locale (defaultTimeLocale)
+#endif
 
 -- | Exception thrown if conversion from a SQL value to a Haskell
 -- value fails.

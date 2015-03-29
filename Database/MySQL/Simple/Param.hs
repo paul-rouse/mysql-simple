@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFunctor, FlexibleInstances,
+{-# LANGUAGE CPP, DeriveDataTypeable, DeriveFunctor, FlexibleInstances,
     OverloadedStrings #-}
 
 -- |
@@ -35,13 +35,18 @@ import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Simple.Types (Binary(..), In(..), Null)
-import System.Locale (defaultTimeLocale)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
+
+#if MIN_VERSION_time(1,5,0)
+import Data.Time.Format (defaultTimeLocale)
+#else
+import System.Locale (defaultTimeLocale)
+#endif
 
 -- | How to render an element when substituting it into a query.
 data Action =
