@@ -28,7 +28,7 @@ module Database.MySQL.Simple.Result
 
 import Control.Applicative ((<$>), (<*>), (<*), pure)
 import Control.Exception (Exception, throw)
-import Data.Attoparsec.Char8 hiding (Result)
+import Data.Attoparsec.ByteString.Char8 hiding (Result)
 import Data.Bits ((.&.), (.|.), shiftL)
 import Data.ByteString (ByteString)
 import Data.Int (Int8, Int16, Int32, Int64)
