@@ -1,7 +1,10 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances #-}
+#if MIN_VERSION_time(1,5,0)
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+#endif
 
 -- |
--- Module:      Database.MySQL.Simpe.QueryResults
+-- Module:      Database.MySQL.Simple.Result
 -- Copyright:   (c) 2011 MailRank, Inc.
 -- License:     BSD3
 -- Maintainer:  Bryan O'Sullivan <bos@serpentine.com>
@@ -185,7 +188,7 @@ isText :: Field -> Bool
 isText f = fieldCharSet f /= 63
 
 newtype Compat = Compat Word32
-    
+
 mkCompats :: [Type] -> Compat
 mkCompats = foldl' f (Compat 0) . map mkCompat
   where f (Compat a) (Compat b) = Compat (a .|. b)
