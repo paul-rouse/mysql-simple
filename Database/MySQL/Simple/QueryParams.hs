@@ -80,5 +80,111 @@ instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
         [render a, render b, render c, render d, render e, render f, render g,
          render h, render i, render j]
 
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q, Param r)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q, render r]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q, Param r, Param s)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q, render r, render s]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q, Param r, Param s, Param t, Param u,
+          Param v)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q, render r, render s, render t, render u,
+         render v]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q, Param r, Param s, Param t, Param u,
+          Param v, Param w)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q, render r, render s, render t, render u,
+         render v, render w]
+
+instance (Param a, Param b, Param c, Param d, Param e, Param f, Param g,
+          Param h, Param i, Param j, Param k, Param l, Param m, Param n,
+          Param o, Param p, Param q, Param r, Param s, Param t, Param u,
+          Param v, Param w, Param x)
+    => QueryParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x) where
+    renderParams (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x) =
+        [render a, render b, render c, render d, render e, render f, render g,
+         render h, render i, render j, render k, render l, render m, render n,
+         render o, render p, render q, render r, render s, render t, render u,
+         render v, render w, render x]
+
 instance (Param a) => QueryParams [a] where
     renderParams = map render
