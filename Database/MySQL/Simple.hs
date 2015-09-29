@@ -160,7 +160,7 @@ formatMany conn q@(Query template) qs = do
       return . toByteString . mconcat $ fromByteString before :
                                         intersperse (fromChar ',') bs ++
                                         [fromByteString after]
-    _ -> return $ fmtError "no valid substitution group found" q []
+    _ -> fmtError "no valid substitution group found" q []
 
 
 getTemplate  :: ByteString -> Maybe (ByteString, ByteString, ByteString)
