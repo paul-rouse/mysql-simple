@@ -102,8 +102,6 @@ import Database.MySQL.Simple.Types (Binary(..), In(..), Only(..), Query(..))
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
 
-import qualified Data.Attoparsec.ByteString.Char8 as AP
-
 -- | Exception thrown if a 'Query' could not be formatted correctly.
 -- This may occur if the number of \'@?@\' characters in the query
 -- string does not match the number of parameters provided.
