@@ -15,6 +15,7 @@ module Database.MySQL.Simple.Types
       Null(..)
     , Only(..)
     , In(..)
+    , VaArgs(..)
     , Binary(..)
     , Query(..)
     ) where
@@ -99,6 +100,18 @@ newtype Only a = Only {
 -- > query c "select * from whatever where id in ?" (Only (In [3,4,5]))
 newtype In a = In a
     deriving (Eq, Ord, Read, Show, Typeable, Functor)
+
+-- | Wrap a list of values for use in a function with variable arguments.
+-- Replaces a single \"@?@\" character with a non-parenthesized list of
+-- rendered values.
+--
+-- Example:
+--
+-- > query conn
+-- >   "SELECT * FROM example_table ORDER BY field(f,?)"
+-- >   (Only (VaArgs [3,2,1]))
+newtype VaArgs a = VaArgs a
+  deriving (Eq, Ord, Read, Show, Typeable, Functor)
 
 -- | Wrap a mostly-binary string to be escaped in hexadecimal.
 newtype Binary a = Binary a

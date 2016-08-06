@@ -34,7 +34,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Database.MySQL.Simple.Types (Binary(..), In(..), Null)
+import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Null)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Lazy as LB
@@ -88,6 +88,11 @@ instance (Param a) => Param (In [a]) where
         Plain (fromChar '(') :
         (intersperse (Plain (fromChar ',')) . map render $ xs) ++
         [Plain (fromChar ')')]
+
+instance (Param a) => Param (VaArgs [a]) where
+    render (VaArgs []) = Plain $ fromByteString "null"
+    render (VaArgs xs) = Many $
+        intersperse (Plain (fromChar ',')) . map render $ xs
 
 instance Param (Binary SB.ByteString) where
     render (Binary bs) = Plain $ fromByteString "x'" `mappend`
