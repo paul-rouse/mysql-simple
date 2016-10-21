@@ -5,7 +5,7 @@
 -- Module:      Database.MySQL.Simple.Param
 -- Copyright:   (c) 2011 MailRank, Inc.
 -- License:     BSD3
--- Maintainer:  Bryan O'Sullivan <bos@serpentine.com>
+-- Maintainer:  Paul Rouse <pyr@doynton.org>
 -- Stability:   experimental
 -- Portability: portable
 --

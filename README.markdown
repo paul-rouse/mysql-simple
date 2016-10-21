@@ -24,19 +24,13 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/bos/mysql-simple/issues).
+[github issue tracker](http://github.com/paul-rouse/mysql-simple/issues).
 
-Master [git repository](http://github.com/bos/mysql-simple):
+Master [git repository](http://github.com/paul-rouse/mysql-simple):
 
-* `git clone git://github.com/bos/mysql-simple.git`
-
-There's also a [Mercurial mirror](http://bitbucket.org/bos/mysql-simple):
-
-* `hg clone http://bitbucket.org/bos/mysql-simple`
-
-(You can create and contribute changes using either git or Mercurial.)
+* `git clone git://github.com/paul-rouse/mysql-simple.git`
 
 # Authors
 
-This library is written and maintained by Bryan O'Sullivan,
-<bos@serpentine.com>.
+This library was written by Bryan O'Sullivan, <bos@serpentine.com>, and
+is now being maintained by Paul Rouse <pyr@doynton.org>.

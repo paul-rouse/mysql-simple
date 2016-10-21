@@ -1,7 +1,7 @@
 name:           mysql-simple
 version:        0.2.2.6
-homepage:       https://github.com/bos/mysql-simple
-bug-reports:    https://github.com/bos/mysql-simple/issues
+homepage:       https://github.com/paul-rouse/mysql-simple
+bug-reports:    https://github.com/paul-rouse/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
 description:    
     A mid-level client library for the MySQL database, intended to be
@@ -17,7 +17,7 @@ description:
 license:        BSD3
 license-file:   LICENSE
 author:         Bryan O'Sullivan <bos@serpentine.com>
-maintainer:     Bryan O'Sullivan <bos@serpentine.com>
+maintainer:     Paul Rouse <pyr@doynton.org>
 copyright:      2011 MailRank, Inc.
 category:       Database
 build-type:     Simple
@@ -62,8 +62,4 @@ library
 
 source-repository head
   type:     git
-  location: http://github.com/bos/mysql-simple
-
-source-repository head
-  type:     mercurial
-  location: http://bitbucket.org/bos/mysql-simple
+  location: http://github.com/paul-rouse/mysql-simple
