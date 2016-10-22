@@ -1,5 +1,5 @@
 name:           mysql-simple
-version:        0.2.2.6
+version:        0.2.2.7
 homepage:       https://github.com/paul-rouse/mysql-simple
 bug-reports:    https://github.com/paul-rouse/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
@@ -23,6 +23,7 @@ category:       Database
 build-type:     Simple
 cabal-version:  >= 1.6
 extra-source-files:
+    ChangeLog.md
     README.markdown
 
 flag developer
