@@ -21,7 +21,7 @@ maintainer:     Paul Rouse <pyr@doynton.org>
 copyright:      2011 MailRank, Inc.
 category:       Database
 build-type:     Simple
-cabal-version:  >= 1.6
+cabal-version:  >= 1.8
 extra-source-files:
     ChangeLog.md
     README.markdown
@@ -60,6 +60,15 @@ library
     ghc-prof-options: -auto-all
     ghc-options: -Werror
     cpp-options: -DASSERTS
+
+test-suite test
+    type:            exitcode-stdio-1.0
+    main-is:         main.hs
+    hs-source-dirs:  test
+    ghc-options:     -Wall
+    build-depends:   base                    >= 4 && < 5
+                   , hspec
+                   , mysql-simple
 
 source-repository head
   type:     git

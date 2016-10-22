@@ -1,0 +1,65 @@
+# Use new container infrastructure to enable caching
+sudo: false
+
+# Choose a lightweight base image; we provide our own build tools.
+language: c
+
+# GHC depends on GMP. You can add other dependencies here as well.
+addons:
+  apt:
+   packages:
+   - libgmp-dev
+
+# Start the database server
+services:
+  - mysql
+
+# The different configurations we want to test. You could also do things like
+# change flags or use --stack-yaml to point to a different file.
+matrix:
+  include:
+  - env: ARGS="--resolver lts-2"
+    compiler: ": # lts-2"
+  - env: ARGS="--resolver lts-6"
+    compiler: ": # lts-6"
+  - env: ARGS="--resolver lts-7"
+    compiler: ": # lts-7"
+  - env: ARGS="--resolver nightly"
+    compiler: ": # nightly"
+  - env: ARGS="--resolver lts"
+    compiler: ": # lts osx"
+    os: osx
+
+before_install:
+# Using compiler above sets CC to an invalid value, so unset it
+- unset CC
+
+# stack
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- if [ `uname` = "Darwin" ];
+  then
+    travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin;
+  else
+    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
+  fi
+
+# OSX seems to need mysql installed
+- if [ `uname` = "Darwin" ];
+  then
+    brew install mysql;
+    mysql.server start;
+  fi
+
+before_script:
+- mysql -u root -e "create database IF NOT EXISTS test;"
+- mysql -u root -e "create user 'test'@'127.0.0.1';"
+- mysql -u root -e "grant select on test.* to 'test'@'127.0.0.1';"
+
+script:
+- stack init $ARGS
+- stack build --test --bench --install-ghc --haddock --no-haddock-deps
+
+cache:
+  directories:
+  - $HOME/.stack
