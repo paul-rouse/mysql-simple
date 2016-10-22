@@ -32,5 +32,6 @@ Master [git repository](http://github.com/paul-rouse/mysql-simple):
 
 # Authors
 
-This library was written by Bryan O'Sullivan, <bos@serpentine.com>, and
-is now being maintained by Paul Rouse <pyr@doynton.org>.
+This library was written by Bryan O'Sullivan, <bos@serpentine.com>,
+to whom all of the credit is due.
+It is now being maintained by Paul Rouse, <pyr@doynton.org>.
