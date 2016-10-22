@@ -22,11 +22,11 @@ matrix:
     compiler: ": # lts-2"
   - env: ARGS="--resolver lts-6"
     compiler: ": # lts-6"
-  - env: ARGS="--resolver lts-7"
+  - env: ARGS="--resolver lts-7" EXTRADEP="extra-deps: [mysql-0.1.2]"
     compiler: ": # lts-7"
-  - env: ARGS="--resolver nightly"
+  - env: ARGS="--resolver nightly" EXTRADEP="extra-deps: [mysql-0.1.2]"
     compiler: ": # nightly"
-  - env: ARGS="--resolver lts"
+  - env: ARGS="--resolver lts" EXTRADEP="extra-deps: [mysql-0.1.2]"
     compiler: ": # lts osx"
     os: osx
 
@@ -56,8 +56,10 @@ before_script:
 - mysql -u root -e "create user 'test'@'127.0.0.1';"
 - mysql -u root -e "grant select on test.* to 'test'@'127.0.0.1';"
 
+# The use of EXTRADEP is a bit of a hack - the second one in stack.yaml wins.
 script:
 - stack init $ARGS
+- echo $EXTRADEP >> stack.yaml
 - stack build --test --bench --install-ghc --haddock --no-haddock-deps
 
 cache:
