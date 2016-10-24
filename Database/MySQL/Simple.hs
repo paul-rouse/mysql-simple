@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE BangPatterns, DeriveDataTypeable, OverloadedStrings, CPP #-}
 
 -- |
 -- Module:      Database.MySQL.Simple
@@ -90,6 +90,7 @@ import Data.ByteString (ByteString)
 import Data.Int (Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend, mconcat)
+import Data.Char (toLower, isSpace)
 import Data.Typeable (Typeable)
 import Database.MySQL.Base (Connection, Result)
 import Database.MySQL.Base.Types (Field)
@@ -98,7 +99,6 @@ import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
 import Database.MySQL.Simple.Result (ResultError(..))
 import Database.MySQL.Simple.Types (Binary(..), In(..), Only(..), Query(..))
-import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
 
@@ -154,18 +154,42 @@ formatQuery conn q@(Query template) qs
 formatMany :: (QueryParams q) => Connection -> Query -> [q] -> IO ByteString
 formatMany _ q [] = fmtError "no rows supplied" q []
 formatMany conn q@(Query template) qs = do
-  case match re template [] of
-    Just [_,before,qbits,after] -> do
+  case getTemplate template of
+    Just (before,qbits,after) -> do
       bs <- mapM (buildQuery conn q qbits . renderParams) qs
       return . toByteString . mconcat $ fromByteString before :
                                         intersperse (fromChar ',') bs ++
                                         [fromByteString after]
-    _ -> error "foo"
+    _ -> fmtError "no valid substitution group found" q []
+
+
+getTemplate  :: ByteString -> Maybe (ByteString, ByteString, ByteString)
+getTemplate qry = do
+    beforeIx <- (6+) <$> findValues qry
+    let (before, rest) = B.splitAt beforeIx qry
+    qbitsIx <- scanBracks rest
+    let (qbits, rest') = B.splitAt qbitsIx rest
+    return (before, stripLeft qbits, stripLeft rest')
   where
-   re = compile "^([^?]+\\bvalues\\s*)\
-                 \(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))\
-                 \([^?]*)$"
-        [caseless]
+#if MIN_VERSION_bytestring(0,10,0)
+    findValues q =
+        let (before, rest) = B.breakSubstring "values" $ B.map toLower q
+        in if B.null before || B.null rest then Nothing else Just $ B.length before
+#else
+    findValues  = B.findSubstring "values" . B.map toLower
+#endif
+    stripLeft   = B.dropWhile isSpace
+    scanBracks  =
+        (\ix -> if ix < 0 then Nothing else Just ix) . go 0 (-1)
+      where
+        go :: Int -> Int -> ByteString -> Int
+        go !ix !depth b = let ix' = ix+1 in case B.uncons b of
+            Just (c, bs)
+                | c == ')'  -> if depth == 0 then ix' else go ix' (depth-1) bs
+                | c == '('  -> go ix' (depth+1) bs
+                | otherwise -> go ix' depth bs
+            Nothing -> (-1)
+
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
 buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
