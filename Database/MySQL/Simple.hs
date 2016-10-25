@@ -618,7 +618,7 @@ fmtError msg q xs = throw FormatError {
 --   For instance, you can always extract a MySQL @TINYINT@ column to
 --   a Haskell 'Int'.  The Haskell 'Float' type can accurately
 --   represent MySQL integer types of size up to @INT24@, so it is
---   considered compatble with those types.
+--   considered compatible with those types.
 --
 -- * A numeric compatibility check is based only on the type of a
 --   column, /not/ on its values. For instance, a MySQL @LONG_LONG@
