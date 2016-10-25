@@ -23,7 +23,7 @@ module Database.MySQL.Simple.QueryResults
 import Control.Exception (throw)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import Database.MySQL.Base.Types (Field(fieldType))
+import Database.MySQL.Base.Types (Field(fieldType, fieldName))
 import Database.MySQL.Simple.Result (ResultError(..), Result(..))
 import Database.MySQL.Simple.Types (Only(..))
 
@@ -357,6 +357,7 @@ convertError fs vs n = throw $ ConversionFailed
     (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
                                                   (map (fmap ellipsis) vs)))
     (show n ++ " slots in target type")
+    (show (map (B.unpack . fieldName) fs))
     "mismatch between number of columns to convert and number in target type"
 
 ellipsis :: ByteString -> ByteString

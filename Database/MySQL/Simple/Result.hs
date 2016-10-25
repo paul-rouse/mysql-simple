@@ -66,11 +66,13 @@ data ResultError = Incompatible { errSQLType :: String
                  -- ^ The SQL and Haskell types are not compatible.
                  | UnexpectedNull { errSQLType :: String
                                   , errHaskellType :: String
+                                  , errFieldName :: String
                                   , errMessage :: String }
                  -- ^ A SQL @NULL@ was encountered when the Haskell
                  -- type did not permit it.
                  | ConversionFailed { errSQLType :: String
                                     , errHaskellType :: String
+                                    , errFieldName :: String
                                     , errMessage :: String }
                  -- ^ The SQL value could not be parsed, or could not
                  -- be represented as a valid Haskell value, or an
@@ -219,7 +221,8 @@ doConvert f types cvt (Just bs)
     | mkCompat (fieldType f) `compat` types = cvt bs
     | otherwise = incompatible f (typeOf (cvt undefined)) "types incompatible"
 doConvert f _ cvt _ = throw $ UnexpectedNull (show (fieldType f))
-                              (show (typeOf (cvt undefined))) ""
+                              (show (typeOf (cvt undefined)))
+                              (B8.unpack (fieldName f)) ""
 
 incompatible :: Field -> TypeRep -> String -> a
 incompatible f r = throw . Incompatible (show (fieldType f))
@@ -228,6 +231,7 @@ incompatible f r = throw . Incompatible (show (fieldType f))
 
 conversionFailed :: Field -> String -> String -> a
 conversionFailed f s = throw . ConversionFailed (show (fieldType f)) s
+                                 (B8.unpack (fieldName f))
 
 atto :: (Typeable a) => Compat -> Parser a -> Field -> Maybe ByteString -> a
 atto types p0 f = doConvert f types $ go undefined p0
