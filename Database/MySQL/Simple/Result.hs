@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances, OverloadedStrings #-}
 #if MIN_VERSION_time(1,5,0)
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 #endif
@@ -38,7 +38,7 @@ import Data.Int (Int8, Int16, Int32, Int64)
 import Data.List (foldl')
 import Data.Ratio (Ratio)
 import Data.Time.Calendar (Day, fromGregorian)
-import Data.Time.Clock (UTCTime)
+import Data.Time.Clock (UTCTime(..))
 import Data.Time.Format (parseTime)
 import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
@@ -164,7 +164,10 @@ instance Result UTCTime where
     convert f = doConvert f ok $ \bs ->
                 case parseTime defaultTimeLocale "%F %T" (B8.unpack bs) of
                   Just t -> t
-                  Nothing -> conversionFailed f "UTCTime" "could not parse"
+                  Nothing
+                    | SB.isPrefixOf "0000-00-00" bs ->
+                        UTCTime (fromGregorian 0 0 0) 0
+                    | otherwise -> conversionFailed f "UTCTime" "could not parse"
         where ok = mkCompats [DateTime,Timestamp]
 
 instance Result Day where
