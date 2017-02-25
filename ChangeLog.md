@@ -1,3 +1,7 @@
+## 0.4.0.1
+
+* Fix https://github.com/paul-rouse/mysql-simple/issues/35
+
 ## 0.4.0.0
 
 * Add type VaArgs for non-parenthesized variable-length list of parameters.
