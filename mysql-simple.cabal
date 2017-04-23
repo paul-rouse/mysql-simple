@@ -52,7 +52,7 @@ library
     pcre-light,
     old-locale,
     text >= 0.11.0.2,
-    time >= 1.5
+    time
 
   ghc-options: -Wall -fwarn-tabs
   if impl(ghc >= 7.10)

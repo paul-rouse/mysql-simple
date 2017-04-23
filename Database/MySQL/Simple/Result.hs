@@ -39,7 +39,7 @@ import Data.List (foldl')
 import Data.Ratio (Ratio)
 import Data.Time.Calendar (Day, fromGregorian)
 import Data.Time.Clock (UTCTime(..))
-import Data.Time.Format (parseTimeM)
+import Data.Time.Format (parseTime)
 import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
@@ -162,7 +162,7 @@ instance Result [Char] where
 
 instance Result UTCTime where
     convert f = doConvert f ok $ \bs ->
-                case parseTimeM False defaultTimeLocale "%F %T%Q" (B8.unpack bs) of
+                case parseTime defaultTimeLocale "%F %T%Q" (B8.unpack bs) of
                   Just t -> t
                   Nothing
                     | SB.isPrefixOf "0000-00-00" bs ->
