@@ -284,6 +284,44 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
 instance (Result a, Result b, Result c, Result d, Result e, Result f,
           Result g, Result h, Result i, Result j, Result k, Result l,
           Result m, Result n, Result o, Result p, Result q, Result r,
+          Result s, Result t) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo,fp,fq,fr,fs,
+                    ft]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl,vm,vn,vo,vp,vq,vr,vs,
+                    vt]
+        = (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+              !m = convert fm vm; !n = convert fn vn; !o = convert fo vo
+              !p = convert fp vp; !q = convert fq vq; !r = convert fr vr
+              !s = convert fs vs; !t = convert ft vt
+    convertResults fs_ vs_  = convertError fs_ vs_ 20
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l,
+          Result m, Result n, Result o, Result p, Result q, Result r,
+          Result s, Result t, Result u) =>
+    QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u) where
+    convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo,fp,fq,fr,fs,
+                    ft,fu]
+                   [va,vb,vc,vd,ve,vf,vg,vh,vi,vj,vk,vl,vm,vn,vo,vp,vq,vr,vs,
+                    vt,vu]
+        = (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u)
+        where !a = convert fa va; !b = convert fb vb; !c = convert fc vc
+              !d = convert fd vd; !e = convert fe ve; !f = convert ff vf
+              !g = convert fg vg; !h = convert fh vh; !i = convert fi vi
+              !j = convert fj vj; !k = convert fk vk; !l = convert fl vl
+              !m = convert fm vm; !n = convert fn vn; !o = convert fo vo
+              !p = convert fp vp; !q = convert fq vq; !r = convert fr vr
+              !s = convert fs vs; !t = convert ft vt; !u = convert fu vu
+    convertResults fs_ vs_  = convertError fs_ vs_ 21
+
+instance (Result a, Result b, Result c, Result d, Result e, Result f,
+          Result g, Result h, Result i, Result j, Result k, Result l,
+          Result m, Result n, Result o, Result p, Result q, Result r,
           Result s, Result t, Result u, Result v) =>
     QueryResults (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v) where
     convertResults [fa,fb,fc,fd,fe,ff,fg,fh,fi,fj,fk,fl,fm,fn,fo,fp,fq,fr,fs,
