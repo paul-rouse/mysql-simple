@@ -161,7 +161,7 @@ formatMany conn q@(Query template) qs = do
       return . toByteString . mconcat $ fromByteString before :
                                         intersperse (fromChar ',') bs ++
                                         [fromByteString after]
-    _ -> error "foo"
+    _ -> fmtError "incorrect parameter syntax in query" q []
   where
    re = compile "^([^?]+\\bvalues\\s*)\
                  \(\\(\\s*[?](?:\\s*,\\s*[?])*\\s*\\))\
