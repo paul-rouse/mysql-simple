@@ -162,7 +162,7 @@ instance Result [Char] where
 
 instance Result UTCTime where
     convert f = doConvert f ok $ \bs ->
-                case parseTime defaultTimeLocale "%F %T" (B8.unpack bs) of
+                case parseTime defaultTimeLocale "%F %T%Q" (B8.unpack bs) of
                   Just t -> t
                   Nothing
                     | SB.isPrefixOf "0000-00-00" bs ->
