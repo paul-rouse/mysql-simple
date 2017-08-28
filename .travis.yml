@@ -24,9 +24,11 @@ matrix:
     compiler: ": # lts-6"
   - env: ARGS="--resolver lts-7 --stack-yaml stack-lts-7.yaml"
     compiler: ": # lts-7"
-  - env: ARGS="--resolver nightly --stack-yaml stack-lts-7.yaml"
+  - env: ARGS="--resolver lts-8"
+    compiler: ": # lts-8"
+  - env: ARGS="--resolver nightly
     compiler: ": # nightly"
-  - env: ARGS="--resolver lts --stack-yaml stack-lts-7.yaml"
+  - env: ARGS="--resolver lts
     compiler: ": # lts osx"
     os: osx
 
@@ -54,7 +56,9 @@ before_install:
 before_script:
 - mysql -u root -e "create database IF NOT EXISTS test;"
 - mysql -u root -e "create user 'test'@'127.0.0.1';"
+- mysql -u root -e "create user 'test'@'::1';"
 - mysql -u root -e "grant select on test.* to 'test'@'127.0.0.1';"
+- mysql -u root -e "grant select on test.* to 'test'@'::1';"
 
 script:
 - stack build $ARGS --test --bench --install-ghc --haddock --no-haddock-deps
