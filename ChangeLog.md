@@ -1,3 +1,8 @@
+## 0.4.1.0
+
+* Fix `error "foo"` left in code (https://github.com/paul-rouse/mysql-simple/issues/39)
+* Allow fractional seconds in to be parsed in date/time results https://github.com/paul-rouse/mysql-simple/pull/37
+
 ## 0.4.0.1
 
 * Fix https://github.com/paul-rouse/mysql-simple/issues/35
