@@ -190,7 +190,7 @@ instance Param LT.Text where
     {-# INLINE render #-}
 
 instance Param UTCTime where
-    render = Plain . Utf8.fromString . formatTime defaultTimeLocale "'%F %T'"
+    render = Plain . Utf8.fromString . formatTime defaultTimeLocale "'%F %T%Q'"
     {-# INLINE render #-}
 
 instance Param Day where
