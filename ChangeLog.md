@@ -1,3 +1,7 @@
+## 0.4.2.0
+
+* Handle fractional seconds in parameter substitution (without affecting cases where only whole seconds are used).  https://github.com/paul-rouse/mysql-simple/pull/40
+
 ## 0.4.1.0
 
 * Add missing tuple instances of QueryResults (https://github.com/paul-rouse/mysql-simple/issues/9)
