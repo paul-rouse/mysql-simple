@@ -1,3 +1,7 @@
+## 0.4.3
+
+* Use Data.Time.Format to parse TimeOfDay results properly (missing in https://github.com/paul-rouse/mysql-simple/pull/37).
+
 ## 0.4.2.0
 
 * Handle fractional seconds in parameter substitution (without affecting cases where only whole seconds are used).  https://github.com/paul-rouse/mysql-simple/pull/40

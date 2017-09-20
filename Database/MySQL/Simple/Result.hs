@@ -181,12 +181,9 @@ instance Result Day where
                                    <*> decimal
 
 instance Result TimeOfDay where
-    convert f = flip (atto ok) f $ do
-                hours <- decimal <* char ':'
-                mins <- decimal <* char ':'
-                secs <- decimal :: Parser Int
-                case makeTimeOfDayValid hours mins (fromIntegral secs) of
-                  Just t -> return t
+    convert f = doConvert f ok $ \bs ->
+                case parseTime defaultTimeLocale "%T%Q" (B8.unpack bs) of
+                  Just t -> t
                   _      -> conversionFailed f "TimeOfDay" "could not parse"
         where ok = mkCompats [Time]
 
