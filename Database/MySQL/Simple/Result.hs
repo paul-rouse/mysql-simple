@@ -66,6 +66,8 @@ data ResultError = Incompatible { errSQLType :: String
                  -- ^ The SQL and Haskell types are not compatible.
                  | UnexpectedNull { errSQLType :: String
                                   , errHaskellType :: String
+                                  , errFieldDatabase :: String
+                                  , errFieldTable :: String
                                   , errFieldName :: String
                                   , errMessage :: String }
                  -- ^ A SQL @NULL@ was encountered when the Haskell
@@ -222,7 +224,10 @@ doConvert f types cvt (Just bs)
     | otherwise = incompatible f (typeOf (cvt undefined)) "types incompatible"
 doConvert f _ cvt _ = throw $ UnexpectedNull (show (fieldType f))
                               (show (typeOf (cvt undefined)))
-                              (B8.unpack (fieldName f)) ""
+                              (B8.unpack (fieldDB f))
+                              (B8.unpack (fieldTable f))
+                              (B8.unpack (fieldName f))
+                              ""
 
 incompatible :: Field -> TypeRep -> String -> a
 incompatible f r = throw . Incompatible (show (fieldType f))
