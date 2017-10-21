@@ -1,3 +1,7 @@
+## 0.4.4
+
+* Report table name and database in the UnexpectedNull case of ResultError, using the previously empty errMessage field
+
 ## 0.4.3
 
 * Use Data.Time.Format to parse TimeOfDay results properly (missing in https://github.com/paul-rouse/mysql-simple/pull/37).

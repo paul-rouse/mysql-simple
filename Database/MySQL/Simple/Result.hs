@@ -222,7 +222,12 @@ doConvert f types cvt (Just bs)
     | otherwise = incompatible f (typeOf (cvt undefined)) "types incompatible"
 doConvert f _ cvt _ = throw $ UnexpectedNull (show (fieldType f))
                               (show (typeOf (cvt undefined)))
-                              (B8.unpack (fieldName f)) ""
+                              (B8.unpack (fieldName f))
+                              ("unexpected null in table "
+                               ++ B8.unpack (fieldTable f)
+                               ++ " of database "
+                               ++ B8.unpack (fieldDB f)
+                              )
 
 incompatible :: Field -> TypeRep -> String -> a
 incompatible f r = throw . Incompatible (show (fieldType f))
