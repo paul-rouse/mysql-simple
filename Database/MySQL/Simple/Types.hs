@@ -23,6 +23,7 @@ module Database.MySQL.Simple.Types
 import Blaze.ByteString.Builder (toByteString)
 import Control.Arrow (first)
 import Data.ByteString (ByteString)
+import Data.Semigroup (Semigroup(..))
 import Data.Monoid (Monoid(..))
 import Data.String (IsString(..))
 import Data.Typeable (Typeable)
@@ -69,9 +70,13 @@ instance Read Query where
 instance IsString Query where
     fromString = Query . toByteString . Utf8.fromString
 
+instance Semigroup Query where
+    (<>) (Query a) (Query b) = Query (B.append a b)
+    {-# INLINE (<>) #-}
+
 instance Monoid Query where
     mempty = Query B.empty
-    mappend (Query a) (Query b) = Query (B.append a b)
+    mappend = (<>)
     {-# INLINE mappend #-}
 
 -- | A single-value \"collection\".
