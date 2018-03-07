@@ -28,6 +28,8 @@ import qualified Data.ByteString.Base16.Lazy as L16
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Time.Calendar (Day, showGregorian)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Format (formatTime)
@@ -88,6 +90,9 @@ instance (Param a) => Param (In [a]) where
         Plain (fromChar '(') :
         (intersperse (Plain (fromChar ',')) . map render $ xs) ++
         [Plain (fromChar ')')]
+
+instance (Param a) => Param (In (Set a)) where
+    render = render . fmap Set.toList
 
 instance (Param a) => Param (VaArgs [a]) where
     render (VaArgs []) = Plain $ fromByteString "null"

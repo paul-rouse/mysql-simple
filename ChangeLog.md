@@ -1,3 +1,5 @@
+* Add a `(Param a) => Param (In (Set a))` instance.
+
 ## 0.4.4
 
 * Report table name and database in the UnexpectedNull case of ResultError, using the previously empty errMessage field
