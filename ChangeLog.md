@@ -1,4 +1,8 @@
+## 0.4.5
+
+* Add Semigroup instance for Query
 * Add a `(Param a) => Param (In (Set a))` instance.
+* Drop testing under GHC 7.8 / lts-2
 
 ## 0.4.4
 

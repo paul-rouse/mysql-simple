@@ -18,18 +18,12 @@ services:
 # change flags or use --stack-yaml to point to a different file.
 matrix:
   include:
-  - env: ARGS="--resolver lts-2"
-    compiler: ": # lts-2"
   - env: ARGS="--resolver lts-6"
     compiler: ": # lts-6"
-  - env: ARGS="--resolver lts-7 --stack-yaml stack-lts-7.yaml"
-    compiler: ": # lts-7"
-  - env: ARGS="--resolver lts-8"
-    compiler: ": # lts-8"
   - env: ARGS="--resolver lts-9"
     compiler: ": # lts-9"
-  - env: ARGS="--resolver lts-10"
-    compiler: ": # lts-10"
+  - env: ARGS="--resolver lts-11"
+    compiler: ": # lts-11"
   - env: ARGS="--resolver nightly
     compiler: ": # nightly"
   - env: ARGS="--resolver lts

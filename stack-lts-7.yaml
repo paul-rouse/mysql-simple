@@ -1,5 +1,0 @@
-resolver: lts-7.5
-packages: 
-- .
-extra-deps:
-- mysql-0.1.2
