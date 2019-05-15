@@ -1,5 +1,5 @@
 name:           mysql-simple
-version:        0.4.5
+version:        0.4.6
 homepage:       https://github.com/paul-rouse/mysql-simple
 bug-reports:    https://github.com/paul-rouse/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
@@ -40,6 +40,10 @@ library
     Database.MySQL.Simple.QueryResults
     Database.MySQL.Simple.Result
     Database.MySQL.Simple.Types
+
+  other-modules:
+    Database.MySQL.Simple.QueryParams.Generic
+    Database.MySQL.Simple.QueryResults.Generic
 
   build-depends:
     attoparsec >= 0.10.0.0,

@@ -25,6 +25,7 @@ module Database.MySQL.Simple.Result
     (
       Result(..)
     , ResultError(..)
+    , convertError
     ) where
 
 #include "MachDeps.h"
@@ -40,7 +41,7 @@ import Data.Ratio (Ratio)
 import Data.Time.Calendar (Day, fromGregorian)
 import Data.Time.Clock (UTCTime(..))
 import Data.Time.Format (parseTime)
-import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
+import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Base.Types (Field(..), Type(..))
@@ -246,3 +247,27 @@ atto types p0 f = doConvert f types $ go undefined p0
         case parseOnly p s of
           Left err -> conversionFailed f (show (typeOf dummy)) err
           Right v  -> v
+
+-- | Throw a 'ConversionFailed' exception, indicating a mismatch
+-- between the number of columns in the 'Field' and row, and the
+-- number in the collection to be converted to.
+convertError :: [Field]
+             -- ^ Descriptors of fields to be converted.
+             -> [Maybe ByteString]
+             -- ^ Contents of the row to be converted.
+             -> Int
+             -- ^ Number of columns expected for conversion.  For
+             -- instance, if converting to a 3-tuple, the number to
+             -- provide here would be 3.
+             -> a
+convertError fs vs n = throw $ ConversionFailed
+    (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
+                                                  (map (fmap ellipsis) vs)))
+    (show n ++ " slots in target type")
+    (show (map (SB.unpack . fieldName) fs))
+    "mismatch between number of columns to convert and number in target type"
+
+ellipsis :: ByteString -> ByteString
+ellipsis bs
+    | SB.length bs > 15 = SB.take 10 bs `SB.append` "[...]"
+    | otherwise         = bs

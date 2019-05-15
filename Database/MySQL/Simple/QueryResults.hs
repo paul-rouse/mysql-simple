@@ -1,4 +1,5 @@
-{-# LANGUAGE BangPatterns, OverloadedStrings #-}
+{-# LANGUAGE BangPatterns, OverloadedStrings, DefaultSignatures,
+  FlexibleContexts #-}
 
 -- |
 -- Module:      Database.MySQL.Simpe.QueryResults
@@ -20,12 +21,14 @@ module Database.MySQL.Simple.QueryResults
     , convertError
     ) where
 
-import Control.Exception (throw)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
-import Database.MySQL.Base.Types (Field(fieldType, fieldName))
-import Database.MySQL.Simple.Result (ResultError(..), Result(..))
+import Database.MySQL.Base.Types (Field)
+import Database.MySQL.Simple.Result (Result(..), convertError)
+
 import Database.MySQL.Simple.Types (Only(..))
+import qualified Database.MySQL.Simple.QueryResults.Generic as Generic
+import GHC.Generics (Generic, Rep)
+import qualified GHC.Generics as Generics
 
 -- | A collection type that can be converted from a list of strings.
 --
@@ -67,13 +70,34 @@ import Database.MySQL.Simple.Types (Only(..))
 --              !b = 'convert' fb vb
 --    'convertResults' fs vs  = 'convertError' fs vs 2
 -- @
-
+--
+-- === Generic derivation
+--
+-- Since version 0.4.6 it's possible to generically derive instances
+-- for some types.  One conditition is that the type must only have a
+-- single constructor.  In those cases an instance can derived thus:
+--
+-- @
+-- deriving anyclass instance 'QueryResults' User
+-- @
+--
+-- This requires @-XDeriveAnyClass@ and @-XDerivingStrategies@.
 class QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
     -- ^ Convert values from a row into a Haskell collection.
     --
     -- This function will throw a 'ResultError' if conversion of the
     -- collection fails.
+
+    default convertResults
+        :: Generic a
+        => Generic.QueryResults (Rep a)
+        => [Field]
+        -> [Maybe ByteString]
+        -> a
+    convertResults xs ys
+        = Generics.to
+        $ Generic.convertResults xs ys
 
 instance (Result a) => QueryResults (Only a) where
     convertResults [fa] [va] = Only a
@@ -378,27 +402,3 @@ instance (Result a, Result b, Result c, Result d, Result e, Result f,
               !s = convert fs vs; !t = convert ft vt; !u = convert fu vu
               !v = convert fv vv; !w = convert fw vw; !x = convert fx vx;
     convertResults fs_ vs_  = convertError fs_ vs_ 24
-
--- | Throw a 'ConversionFailed' exception, indicating a mismatch
--- between the number of columns in the 'Field' and row, and the
--- number in the collection to be converted to.
-convertError :: [Field]
-             -- ^ Descriptors of fields to be converted.
-             -> [Maybe ByteString]
-             -- ^ Contents of the row to be converted.
-             -> Int
-             -- ^ Number of columns expected for conversion.  For
-             -- instance, if converting to a 3-tuple, the number to
-             -- provide here would be 3.
-             -> a
-convertError fs vs n = throw $ ConversionFailed
-    (show (length fs) ++ " values: " ++ show (zip (map fieldType fs)
-                                                  (map (fmap ellipsis) vs)))
-    (show n ++ " slots in target type")
-    (show (map (B.unpack . fieldName) fs))
-    "mismatch between number of columns to convert and number in target type"
-
-ellipsis :: ByteString -> ByteString
-ellipsis bs
-    | B.length bs > 15 = B.take 10 bs `B.append` "[...]"
-    | otherwise        = bs

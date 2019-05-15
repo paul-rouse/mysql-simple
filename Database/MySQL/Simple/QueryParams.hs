@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 -- |
 -- Module:      Database.MySQL.Simple.QueryParams
 -- Copyright:   (c) 2011 MailRank, Inc.
@@ -19,15 +20,39 @@ module Database.MySQL.Simple.QueryParams
 
 import Database.MySQL.Simple.Param (Action(..), Param(..))
 import Database.MySQL.Simple.Types (Only(..))
+import qualified Database.MySQL.Simple.QueryParams.Generic as Generic
+import GHC.Generics (Generic, Rep)
+import GHC.Generics as Generics
 
 -- | A collection type that can be turned into a list of rendering
 -- 'Action's.
 --
 -- Instances should use the 'render' method of the 'Param' class
 -- to perform conversion of each element of the collection.
+--
+-- === Generic derivation
+--
+-- Since version 0.4.6 it's possible to generically derive instances
+-- for some types.  One conditition is that the type must only have a
+-- single constructor.  In those cases an instance can derived thus:
+--
+-- @
+-- deriving anyclass instance 'QueryParams' User
+-- @
+--
+-- This requires @-XDeriveAnyClass@ and @-XDerivingStrategies@.  Here
+-- @User@ is the example from
+-- 'Database.MySQL.Simple.QueryResults.QueryResults'.
 class QueryParams a where
     renderParams :: a -> [Action]
     -- ^ Render a collection of values.
+
+    default renderParams
+        :: Generic a
+        => Generic.QueryParams (Rep a)
+        => a
+        -> [Action]
+    renderParams = Generic.renderParams . Generics.from
 
 instance QueryParams () where
     renderParams _ = []
