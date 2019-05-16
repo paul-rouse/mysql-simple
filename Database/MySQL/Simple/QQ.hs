@@ -1,9 +1,12 @@
-{-# LANGUAGE TemplateHaskell, TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
+
 module Database.MySQL.Simple.QQ
   ( sql
   ) where
 
-import Prelude
+import Prelude ()
+import Database.MySQL.Simple.Prelude
 import Language.Haskell.TH          (Exp, Q, appE, stringE)
 import Language.Haskell.TH.Quote    (QuasiQuoter (..))
 import Database.MySQL.Simple        (Query, Query)
@@ -42,4 +45,4 @@ sql = QuasiQuoter
   err ctxt = error (printf "Database.MySQL.Simple.QQ.sql: quasiquoter used in %s context" ctxt)
 
 quote :: String -> Q Exp
-quote = appE [| fromString @Query |] . stringE
+quote = appE [| fromString :: String -> Query |] . stringE

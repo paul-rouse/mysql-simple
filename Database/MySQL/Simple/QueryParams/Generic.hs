@@ -1,14 +1,16 @@
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, InstanceSigs, KindSignatures #-}
+{-# LANGUAGE ScopedTypeVariables, TypeOperators, InstanceSigs #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 module Database.MySQL.Simple.QueryParams.Generic
   ( QueryParams(..)
   ) where
 
-import Data.Kind
+import Prelude ()
+import Database.MySQL.Simple.Prelude
 import GHC.Generics
 
 import Database.MySQL.Simple.Param (Action(..), Param(..))
 
-class QueryParams (f :: Type -> Type) where
+class QueryParams f where
   renderParams :: f a -> [Action]
 
 -- This instance might not make sense, though the signature of

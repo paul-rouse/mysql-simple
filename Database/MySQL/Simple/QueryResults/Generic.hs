@@ -1,17 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, InstanceSigs, KindSignatures #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
+
 module Database.MySQL.Simple.QueryResults.Generic
   ( QueryResults(..)
   ) where
 
-import Prelude
-import Data.Kind
+import Prelude ()
+import Database.MySQL.Simple.Prelude
 import Data.ByteString (ByteString)
 import GHC.Generics
 
 import Database.MySQL.Base.Types (Field)
 import Database.MySQL.Simple.Result (Result(convert), convertError)
 
-class QueryResults (f :: Type -> Type) where
+class QueryResults f where
   convertResults :: [Field] -> [Maybe ByteString] -> (f a)
 
 -- This instance might not make sense, though the signature of
