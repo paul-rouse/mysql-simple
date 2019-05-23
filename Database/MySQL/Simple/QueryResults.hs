@@ -82,6 +82,10 @@ import qualified GHC.Generics as Generics
 -- @
 --
 -- This requires @-XDeriveAnyClass@ and @-XDerivingStrategies@.
+--
+-- Caveat emptor! The error message generated when a conversion
+-- failure happens and when using the generic implementation is not as
+-- helpful as with hand-written instances.
 class QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
     -- ^ Convert values from a row into a Haskell collection.
