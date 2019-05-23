@@ -28,7 +28,6 @@ import Database.MySQL.Simple.Result (Result(..), convertError)
 import Database.MySQL.Simple.Types (Only(..))
 import qualified Database.MySQL.Simple.QueryResults.Generic as Generic
 import GHC.Generics (Generic, Rep)
-import qualified GHC.Generics as Generics
 
 -- | A collection type that can be converted from a list of strings.
 --
@@ -83,9 +82,10 @@ import qualified GHC.Generics as Generics
 --
 -- This requires @-XDeriveAnyClass@ and @-XDerivingStrategies@.
 --
--- Caveat emptor! The error message generated when a conversion
--- failure happens and when using the generic implementation is not as
--- helpful as with hand-written instances.
+-- Caveat emptor! The generic derivation does not figure out how many
+-- summands are in the target type.  This information is only used for
+-- the error message which gets displayed when a conversion error
+-- happens.
 class QueryResults a where
     convertResults :: [Field] -> [Maybe ByteString] -> a
     -- ^ Convert values from a row into a Haskell collection.
@@ -99,9 +99,7 @@ class QueryResults a where
         => [Field]
         -> [Maybe ByteString]
         -> a
-    convertResults xs ys
-        = Generics.to
-        $ Generic.convertResults xs ys
+    convertResults = Generic.convert
 
 instance (Result a) => QueryResults (Only a) where
     convertResults [fa] [va] = Only a
