@@ -4,18 +4,23 @@ This code was originally written by Li-yao Xia. See
 <https://stackoverflow.com/a/56351505/1021134>.
 -}
 {-# LANGUAGE AllowAmbiguousTypes, ScopedTypeVariables, TypeFamilies,
-  UndecidableInstances, FlexibleContexts, DataKinds, TypeOperators #-}
+  UndecidableInstances, FlexibleContexts, DataKinds, TypeOperators,
+  CPP #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
 module Database.MySQL.Simple.Arity
   ( Arity
   , arity
-  , KnownNat
+#if MIN_VERSION_base(4,10,0)
+, KnownNat
+#endif
   ) where
 
-import Data.Kind (Type)
-import Data.Proxy (Proxy(Proxy))
 import Numeric.Natural (Natural)
+import Data.Proxy (Proxy)
+#if MIN_VERSION_base(4,10,0)
+import Data.Proxy (Proxy(Proxy))
+import Data.Kind (Type)
 import GHC.Generics (M1, U1, K1, (:*:), Generic, Rep, (:+:), V1)
 import GHC.TypeNats (KnownNat, Nat, type (+), natVal)
 import GHC.TypeLits (TypeError, ErrorMessage(ShowType, Text, (:<>:)))
@@ -49,3 +54,9 @@ arity _ = natVal p
   where
   p :: Proxy (Arity a (Rep a))
   p = Proxy
+#else
+type family Arity (x :: *) (f :: * -> *) :: ()
+
+arity :: Proxy a -> Natural
+arity _ = 0
+#endif

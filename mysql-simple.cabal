@@ -43,6 +43,7 @@ library
     Database.MySQL.Simple.Types
 
   other-modules:
+    Database.MySQL.Simple.Arity
     Database.MySQL.Simple.Compat
     Database.MySQL.Simple.Prelude
     Database.MySQL.Simple.QueryParams.Generic

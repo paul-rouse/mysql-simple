@@ -1,5 +1,5 @@
 {-# LANGUAGE BangPatterns, OverloadedStrings, DefaultSignatures,
-  FlexibleContexts #-}
+  FlexibleContexts, CPP #-}
 
 -- |
 -- Module:      Database.MySQL.Simpe.QueryResults
@@ -27,7 +27,9 @@ import Database.MySQL.Simple.Result (Result(..), convertError)
 
 import Database.MySQL.Simple.Types (Only(..))
 import qualified Database.MySQL.Simple.QueryResults.Generic as Generic
+#if MIN_VERSION_base(4,10,0)
 import Database.MySQL.Simple.Arity (Arity, KnownNat)
+#endif
 import GHC.Generics (Generic, Rep)
 
 -- | A collection type that can be converted from a list of strings.
@@ -91,8 +93,10 @@ class QueryResults a where
 
     default convertResults
         :: Generic a
+#if MIN_VERSION_base(4,10,0)
         -- Used for for error messages.
         => KnownNat (Arity a (Rep a))
+#endif
         => Generic.QueryResults (Rep a)
         => [Field]
         -> [Maybe ByteString]

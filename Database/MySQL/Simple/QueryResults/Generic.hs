@@ -5,6 +5,7 @@
   , InstanceSigs
   , FlexibleContexts
   , AllowAmbiguousTypes
+  , CPP
   #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
@@ -24,22 +25,32 @@ import Database.MySQL.Base.Types (Field)
 import Database.MySQL.Simple.Result
   (Result, ResultError)
 import qualified Database.MySQL.Simple.Result as Result
+#if MIN_VERSION_base(4,10,0)
 import Data.Proxy (Proxy(Proxy))
 import Database.MySQL.Simple.Arity (Arity, arity, KnownNat)
+#endif
 
 -- | Generic implementation of
 -- 'Database.MySQL.Simple.QueryResults.Generic.convertResults'.
 convert
   :: forall a
   .  Generic a
+#if MIN_VERSION_base(4,10,0)
   => KnownNat (Arity a (Rep a))
+#endif
   => QueryResults (Rep a)
   => [Field]
   -> [Maybe ByteString]
   -> a
 convert xs ys = Generics.to $ convertResults err xs ys
   where
-  err = Result.convertException xs ys $ fromIntegral $ arity (Proxy :: Proxy a)
+  err = Result.convertException xs ys n
+  n :: Int
+#if MIN_VERSION_base(4,10,0)
+  n = fromIntegral $ arity (Proxy :: Proxy a)
+#else
+  n = -1
+#endif
 
 -- | The generic counterpart to 'Database.MySQL.Simple.QueryResults.QueryResults'.
 class QueryResults f where
