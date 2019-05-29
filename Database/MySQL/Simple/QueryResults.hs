@@ -92,7 +92,7 @@ class QueryResults a where
     default convertResults
         :: Generic a
         -- Used for for error messages.
-        => KnownNat (Arity (Rep a))
+        => KnownNat (Arity a (Rep a))
         => Generic.QueryResults (Rep a)
         => [Field]
         -> [Maybe ByteString]

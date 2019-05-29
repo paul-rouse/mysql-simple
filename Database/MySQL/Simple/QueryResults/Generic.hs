@@ -32,7 +32,7 @@ import Database.MySQL.Simple.Arity (Arity, arity, KnownNat)
 convert
   :: forall a
   .  Generic a
-  => KnownNat (Arity (Rep a))
+  => KnownNat (Arity a (Rep a))
   => QueryResults (Rep a)
   => [Field]
   -> [Maybe ByteString]
