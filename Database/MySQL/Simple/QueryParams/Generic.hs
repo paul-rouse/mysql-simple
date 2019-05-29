@@ -1,3 +1,4 @@
+{-| Generic deriviation of 'Database.MySQL.Simple.QueryParams.QueryParams'. -}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, InstanceSigs #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 module Database.MySQL.Simple.QueryParams.Generic

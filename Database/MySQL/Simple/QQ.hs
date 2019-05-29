@@ -1,3 +1,4 @@
+{-| A quasi-quoter for SQL expressions. -}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 

@@ -1,5 +1,11 @@
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, InstanceSigs,
-  KindSignatures, FlexibleContexts #-}
+{-| Generic deriviation of 'Database.MySQL.Simple.QueryResults.QueryResults'. -}
+{-# LANGUAGE
+    ScopedTypeVariables
+  , TypeOperators
+  , InstanceSigs
+  , FlexibleContexts
+  , AllowAmbiguousTypes
+  #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
 module Database.MySQL.Simple.QueryResults.Generic
@@ -18,19 +24,24 @@ import Database.MySQL.Base.Types (Field)
 import Database.MySQL.Simple.Result
   (Result, ResultError)
 import qualified Database.MySQL.Simple.Result as Result
+import Data.Proxy (Proxy(Proxy))
+import Database.MySQL.Simple.Arity (Arity, arity, KnownNat)
 
--- | Generic derivation of
--- "Database.MySQL.Simple.QueryResults.Generic.convertResults"
+-- | Generic implementation of
+-- 'Database.MySQL.Simple.QueryResults.Generic.convertResults'.
 convert
-  :: Generic a
+  :: forall a
+  .  Generic a
+  => KnownNat (Arity (Rep a))
   => QueryResults (Rep a)
   => [Field]
   -> [Maybe ByteString]
   -> a
 convert xs ys = Generics.to $ convertResults err xs ys
   where
-  err = Result.convertException xs ys (-1)
+  err = Result.convertException xs ys $ fromIntegral $ arity (Proxy :: Proxy a)
 
+-- | The generic counterpart to 'Database.MySQL.Simple.QueryResults.QueryResults'.
 class QueryResults f where
   convertResults :: ResultError -> [Field] -> [Maybe ByteString] -> f a
 
