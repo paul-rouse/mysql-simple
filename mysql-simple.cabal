@@ -1,5 +1,5 @@
 name:           mysql-simple
-version:        0.4.5
+version:        0.4.7
 homepage:       https://github.com/paul-rouse/mysql-simple
 bug-reports:    https://github.com/paul-rouse/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
@@ -36,10 +36,18 @@ library
   exposed-modules:
     Database.MySQL.Simple
     Database.MySQL.Simple.Param
+    Database.MySQL.Simple.QQ
     Database.MySQL.Simple.QueryParams
     Database.MySQL.Simple.QueryResults
     Database.MySQL.Simple.Result
     Database.MySQL.Simple.Types
+
+  other-modules:
+    Database.MySQL.Simple.Arity
+    Database.MySQL.Simple.Compat
+    Database.MySQL.Simple.Prelude
+    Database.MySQL.Simple.QueryParams.Generic
+    Database.MySQL.Simple.QueryResults.Generic
 
   build-depends:
     attoparsec >= 0.10.0.0,
@@ -53,7 +61,8 @@ library
     pcre-light,
     old-locale,
     text >= 0.11.0.2,
-    time
+    time,
+    template-haskell
   if !impl(ghc >= 8.0)
     build-depends:
       semigroups >= 0.11 && < 0.19
@@ -76,6 +85,8 @@ test-suite test
                    , hspec
                    , mysql-simple
                    , text
+                   , mysql
+                   , bytestring
 
 source-repository head
   type:     git
