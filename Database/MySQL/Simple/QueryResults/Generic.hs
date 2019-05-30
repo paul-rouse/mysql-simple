@@ -65,8 +65,8 @@ instance QueryResults U1 where
     _  -> throw err
 
 instance Result a => QueryResults (K1 i a) where
-  convertResults err xs ys = case zip xs ys of
-    [(x, y)] -> K1 $ Result.convert x y
+  convertResults err xs ys = case zipWith Result.convert xs ys of
+    [res] -> K1 res
     _ -> throw err
 
 instance QueryResults a => QueryResults (M1 i c a) where

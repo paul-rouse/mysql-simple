@@ -85,6 +85,8 @@ test-suite test
                    , hspec
                    , mysql-simple
                    , text
+                   , mysql
+                   , bytestring
 
 source-repository head
   type:     git
