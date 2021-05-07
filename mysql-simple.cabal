@@ -40,13 +40,14 @@ library
     Database.MySQL.Simple.QueryResults
     Database.MySQL.Simple.Result
     Database.MySQL.Simple.Types
+  other-modules:
+    Database.MySQL.Internal.Blaze
 
   build-depends:
     attoparsec >= 0.10.0.0,
     base < 5,
     base16-bytestring,
     blaze-builder,
-    blaze-textual,
     bytestring >= 0.9,
     containers,
     mysql >= 0.1.1.1,
@@ -57,6 +58,15 @@ library
   if !impl(ghc >= 8.0)
     build-depends:
       semigroups >= 0.11 && < 0.19
+
+  -- hack to support GHC 9 for blaze-textual. see Database.MySQL.Internal.Blaze
+  -- for reasoning
+  if !impl(ghc >= 9.0)
+    build-depends:
+      blaze-textual
+  else
+    build-depends:
+      vector
 
   ghc-options: -Wall -fwarn-tabs
   if impl(ghc >= 7.10)
