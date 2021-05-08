@@ -1,3 +1,7 @@
+## 0.4.6
+
+* Support GHC-9 via blaze-textual shim (https://github.com/paul-rouse/mysql-simple/pull/51).
+
 ## 0.4.5
 
 * Add Semigroup instance for Query
