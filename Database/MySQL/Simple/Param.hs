@@ -21,7 +21,6 @@ module Database.MySQL.Simple.Param
 import Blaze.ByteString.Builder (Builder, fromByteString, fromLazyByteString,
                                  toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
-import Blaze.Text (integral, double, float)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as L16
@@ -43,6 +42,8 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text as ST
 import qualified Data.Text.Encoding as ST
 import qualified Data.Text.Lazy as LT
+
+import Database.MySQL.Internal.Blaze (integral, double, float)
 
 #if MIN_VERSION_time(1,5,0)
 import Data.Time.Format (defaultTimeLocale)

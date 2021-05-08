@@ -5,3 +5,5 @@ cabal.sandbox.config
 TAGS
 *~
 .stack-work
+*.yaml.lock
+dist-newstyle/
