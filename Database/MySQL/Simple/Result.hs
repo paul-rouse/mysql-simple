@@ -204,7 +204,7 @@ compat (Compat a) (Compat b) = a .&. b /= 0
 
 okText, ok8, ok16, ok32, ok64, okWord :: Compat
 okText = mkCompats [VarChar,TinyBlob,MediumBlob,LongBlob,Blob,VarString,String,
-                    Set,Enum]
+                    Set,Enum,Json]
 ok8 = mkCompats [Tiny]
 ok16 = mkCompats [Tiny,Short]
 ok32 = mkCompats [Tiny,Short,Int24,Long]
