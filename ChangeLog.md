@@ -1,3 +1,7 @@
+## 0.4.7
+
+*  Allow JSON fields to be read in as ByteStrings (https://github.com/paul-rouse/mysql-simple/pull/52)
+
 ## 0.4.6
 
 * Support GHC-9 via blaze-textual shim (https://github.com/paul-rouse/mysql-simple/pull/51).
