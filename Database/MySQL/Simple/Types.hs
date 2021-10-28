@@ -34,9 +34,9 @@ import qualified Data.ByteString as B
 data Null = Null
           deriving (Read, Show, Typeable)
 
-instance Eq Null where
-    _ == _ = False
-    _ /= _ = False
+-- instance Eq Null where
+--     _ == _ = False
+--     _ /= _ = False
 
 -- | A query string. This type is intended to make it difficult to
 -- construct a SQL query by concatenating string fragments, as that is
