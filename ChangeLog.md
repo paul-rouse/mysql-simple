@@ -1,3 +1,7 @@
+## 0.4.7.1
+
+* Use parseTimeM from Data.Time.Format instead of parseTime (https://github.com/paul-rouse/mysql-simple/pull/53)
+
 ## 0.4.7
 
 *  Allow JSON fields to be read in as ByteStrings (https://github.com/paul-rouse/mysql-simple/pull/52)
