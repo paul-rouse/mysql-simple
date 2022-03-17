@@ -24,8 +24,8 @@ main :: IO ()
 main =
   bracket (connect testConn) close $ \conn ->
     hspec $ do
-      unitSpec
-      integrationSpec conn
+      describe "Database.MySQL.Simple.unitSpec" unitSpec
+      describe "Database.MySQL.Simple.integrationSpec" $ integrationSpec conn
 
 unitSpec :: Spec
 unitSpec = do
@@ -48,7 +48,14 @@ unitSpec = do
 
 integrationSpec :: Connection -> Spec
 integrationSpec conn = do
-  describe "the library" $ do
+  describe "query_" $ do
     it "can connect to a database" $ do
       result <- query_ conn "select 1 + 1"
       result `shouldBe` [Only (2::Int)]
+    it "can have question marks in string literals" $ do
+      result <- query_ conn "select 'hello?'"
+      result `shouldBe` [Only ("hello?" :: Text)]
+  describe "query" $ do
+    it "can have question marks in string literals" $ do
+      result <- query conn "select 'hello?'" ([] :: [Int])
+      result `shouldBe` [Only ("hello?" :: Text)]
