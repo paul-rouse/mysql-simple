@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, StandaloneDeriving, OverloadedStrings #-}
+{-# LANGUAGE CPP, OverloadedStrings #-}
 
 {-# options_ghc -fno-warn-orphans #-}
 
