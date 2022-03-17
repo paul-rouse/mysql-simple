@@ -104,7 +104,6 @@ import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Only(..), Qu
 import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
--- import Data.Attoparsec.ByteString.Char8 hiding (Result, match)
 
 -- | Exception thrown if a 'Query' could not be formatted correctly.
 -- This may occur if the number of \'@?@\' characters in the query
@@ -198,18 +197,18 @@ splitQuery s = reverse $ fmap (fromByteString . BS.pack . reverse) $ begin [] (B
             '?' ->
                 normal (acc : ret) [] cs
             '\'' ->
-                inQuotes ret (c : acc) cs
+                quotes ret (c : acc) cs
             _ ->
                 normal ret (c : acc) cs
 
-    inQuotes ret acc [] =
-        ret
-    inQuotes ret acc (c : cs) =
+    quotes ret acc [] =
+        acc : ret
+    quotes ret acc (c : cs) =
         case c of
             '\'' ->
                 normal ret (c : acc) cs
             _ ->
-                inQuotes ret (c : acc) cs
+                quotes ret (c : acc) cs
 
 -- | Execute an @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.
