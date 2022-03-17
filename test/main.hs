@@ -1,5 +1,8 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
+{-# LANGUAGE CPP, StandaloneDeriving, OverloadedStrings #-}
 
+{-# options_ghc -fno-warn-orphans #-}
+
+import Data.ByteString.Builder as BS
 import Control.Exception (bracket)
 import Data.Text (Text)
 import Database.MySQL.Simple
@@ -46,6 +49,22 @@ unitSpec = do
         Many [Plain _, Escape "foo", Plain _, Escape "bar", Plain _] -> pure ()
         _ -> expectationFailure "expected a Many with specific contents"
 
+  describe "splitQuery" $ do
+    it "works for a single question mark" $ do
+      splitQuery "select * from foo where name = ?"
+        `shouldBe`
+          ["select * from foo where name =", ""]
+    it "works with a question mark in a string literal" $ do
+      splitQuery "select 'hello?'"
+        `shouldBe`
+          ["select 'hello?'"]
+
+instance Show BS.Builder where
+  show = show . BS.toLazyByteString
+
+instance Eq BS.Builder where
+  a == b = BS.toLazyByteString a == BS.toLazyByteString b
+
 integrationSpec :: Connection -> Spec
 integrationSpec conn = do
   describe "query_" $ do
@@ -57,5 +76,10 @@ integrationSpec conn = do
       result `shouldBe` [Only ("hello?" :: Text)]
   describe "query" $ do
     it "can have question marks in string literals" $ do
-      result <- query conn "select 'hello?'" ([] :: [Int])
+      result <- query conn "select 'hello?'" ()
       result `shouldBe` [Only ("hello?" :: Text)]
+  describe "formatQuery" $ do
+    it "should not blow up on a question mark in string literal" $ do
+      formatQuery conn "select 'hello?'" ()
+        `shouldReturn`
+          "select 'hello?'"

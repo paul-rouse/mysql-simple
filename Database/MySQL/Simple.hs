@@ -80,6 +80,7 @@ module Database.MySQL.Simple
     -- * Helper functions
     , formatMany
     , formatQuery
+    , splitQuery
     ) where
 
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
@@ -180,6 +181,13 @@ buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
         zipParams _ _ = fmtError (show (B.count '?' template) ++
                                   " '?' characters, but " ++
                                   show (length xs) ++ " parameters") q xs
+
+-- | Split a query into fragments separated by @?@ characters. Does not
+-- break a fragment if the question mark is in a string literal.
+splitQuery :: ByteString -> [Builder]
+splitQuery s = fromByteString h : if B.null t then [] else splitQuery (B.tail t)
+  where
+    (h,t) = B.break (=='?') s
 
 -- | Execute an @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.
@@ -373,7 +381,7 @@ fmtError msg q xs = throw FormatError {
 -- facility to address both ease of use and security.
 
 -- $querytype
--- 
+--
 -- A 'Query' is a @newtype@-wrapped 'ByteString'. It intentionally
 -- exposes a tiny API that is not compatible with the 'ByteString'
 -- API; this makes it difficult to construct queries from fragments of
