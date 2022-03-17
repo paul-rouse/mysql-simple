@@ -89,6 +89,7 @@ import Control.Applicative ((<$>), pure)
 import Control.Exception (Exception, bracket, onException, throw, throwIO)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BS
 import Data.Int (Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend, mconcat)
@@ -103,6 +104,7 @@ import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Only(..), Qu
 import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
+-- import Data.Attoparsec.ByteString.Char8 hiding (Result, match)
 
 -- | Exception thrown if a 'Query' could not be formatted correctly.
 -- This may occur if the number of \'@?@\' characters in the query
@@ -170,12 +172,10 @@ formatMany conn q@(Query template) qs = do
         [caseless]
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
-buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
+buildQuery conn q template xs = zipParams (splitQuery template) <$> mapM sub xs
   where sub (Plain b)  = pure b
         sub (Escape s) = (inQuotes . fromByteString) <$> Base.escape conn s
         sub (Many ys)  = mconcat <$> mapM sub ys
-        split s = fromByteString h : if B.null t then [] else split (B.tail t)
-            where (h,t) = B.break (=='?') s
         zipParams (t:ts) (p:ps) = t `mappend` p `mappend` zipParams ts ps
         zipParams [t] []        = t
         zipParams _ _ = fmtError (show (B.count '?' template) ++
@@ -185,9 +185,29 @@ buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
 -- | Split a query into fragments separated by @?@ characters. Does not
 -- break a fragment if the question mark is in a string literal.
 splitQuery :: ByteString -> [Builder]
-splitQuery s = fromByteString h : if B.null t then [] else splitQuery (B.tail t)
+splitQuery s = reverse $ fmap (fromByteString . BS.pack . reverse) $ begin [] (BS.unpack s)
   where
-    (h,t) = B.break (=='?') s
+    begin = normal []
+
+    normal ret acc [] =
+        acc : ret
+    normal ret acc (c : cs) =
+        case c of
+            '?' ->
+                normal (acc : ret) [] cs
+            '\'' ->
+                inQuotes ret (c : acc) cs
+            _ ->
+                normal ret (c : acc) cs
+
+    inQuotes ret acc [] =
+        ret
+    inQuotes ret acc (c : cs) =
+        case c of
+            '\'' ->
+                normal ret (c : acc) cs
+            _ ->
+                inQuotes ret (c : acc) cs
 
 -- | Execute an @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.

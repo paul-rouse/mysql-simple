@@ -53,11 +53,15 @@ unitSpec = do
     it "works for a single question mark" $ do
       splitQuery "select * from foo where name = ?"
         `shouldBe`
-          ["select * from foo where name =", ""]
+          ["select * from foo where name = ", ""]
     it "works with a question mark in a string literal" $ do
       splitQuery "select 'hello?'"
         `shouldBe`
           ["select 'hello?'"]
+    it "works with many question marks" $ do
+      splitQuery "select ? + ? + what from foo where bar = ?"
+        `shouldBe`
+          ["select ", " + ", " + what from foo where bar = ", ""]
 
 instance Show BS.Builder where
   show = show . BS.toLazyByteString
