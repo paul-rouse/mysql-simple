@@ -186,29 +186,31 @@ buildQuery conn q template xs = zipParams queryFragments <$> mapM sub xs
 -- | Split a query into fragments separated by @?@ characters. Does not
 -- break a fragment if the question mark is in a string literal.
 splitQuery :: ByteString -> [Builder]
-splitQuery s = reverse $ fmap (fromByteString . BS.pack . reverse) $ begin [] (BS.unpack s)
+splitQuery s =
+  reverse $ fmap (fromByteString . BS.pack . reverse) $
+    begin [] (BS.unpack s)
   where
-    begin = normal []
+  begin = normal []
 
-    normal ret acc [] =
-        acc : ret
-    normal ret acc (c : cs) =
-        case c of
-            '?' ->
-                normal (acc : ret) [] cs
-            '\'' ->
-                quotes ret (c : acc) cs
-            _ ->
-                normal ret (c : acc) cs
+  normal ret acc [] =
+    acc : ret
+  normal ret acc (c : cs) =
+    case c of
+      '?' ->
+        normal (acc : ret) [] cs
+      '\'' ->
+        quotes ret (c : acc) cs
+      _ ->
+        normal ret (c : acc) cs
 
-    quotes ret acc [] =
-        acc : ret
-    quotes ret acc (c : cs) =
-        case c of
-            '\'' ->
-                normal ret (c : acc) cs
-            _ ->
-                quotes ret (c : acc) cs
+  quotes ret acc [] =
+    acc : ret
+  quotes ret acc (c : cs) =
+    case c of
+      '\'' ->
+        normal ret (c : acc) cs
+      _ ->
+        quotes ret (c : acc) cs
 
 -- | Execute an @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.
