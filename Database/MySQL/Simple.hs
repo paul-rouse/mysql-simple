@@ -172,15 +172,17 @@ formatMany conn q@(Query template) qs = do
         [caseless]
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
-buildQuery conn q template xs = zipParams (splitQuery template) <$> mapM sub xs
+buildQuery conn q template xs = zipParams queryFragments <$> mapM sub xs
   where sub (Plain b)  = pure b
         sub (Escape s) = (inQuotes . fromByteString) <$> Base.escape conn s
         sub (Many ys)  = mconcat <$> mapM sub ys
         zipParams (t:ts) (p:ps) = t `mappend` p `mappend` zipParams ts ps
         zipParams [t] []        = t
-        zipParams _ _ = fmtError (show (B.count '?' template) ++
+        zipParams _ _ = fmtError (show fragmentCount ++
                                   " '?' characters, but " ++
                                   show (length xs) ++ " parameters") q xs
+        fragmentCount = length queryFragments - 1
+        queryFragments = splitQuery template
 
 -- | Split a query into fragments separated by @?@ characters. Does not
 -- break a fragment if the question mark is in a string literal.

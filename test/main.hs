@@ -82,6 +82,16 @@ integrationSpec conn = do
     it "can have question marks in string literals" $ do
       result <- query conn "select 'hello?'" ()
       result `shouldBe` [Only ("hello?" :: Text)]
+    describe "with too many query params" $ do
+      it "should have the right message" $ do
+        (query conn "select 'hello?'" (Only ['a']) :: IO [Only Text])
+          `shouldThrow`
+            (\e -> fmtMessage e == "0 '?' characters, but 1 parameters")
+    describe "with too few query params" $ do
+      it "should have the right message" $ do
+        (query conn "select 'hello?' = ?" () :: IO [Only Text])
+          `shouldThrow`
+            (\e -> fmtMessage e == "1 '?' characters, but 0 parameters")
   describe "formatQuery" $ do
     it "should not blow up on a question mark in string literal" $ do
       formatQuery conn "select 'hello?'" ()
