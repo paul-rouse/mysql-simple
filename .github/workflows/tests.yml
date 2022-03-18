@@ -1,0 +1,53 @@
+name: Tests
+
+on:
+    pull_request:
+    push:
+        branches:
+        - master
+
+jobs:
+  build:
+    name: CI
+    services:
+      # mysql-service Label used to access the service container
+      mysql-service:
+        # Docker Hub image (also with version)
+        image: mysql:8.0
+        env:
+          ## Accessing to Github secrets, where you can store your configuration
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: test
+        ports:
+          - 33306:3306
+        # Set health checks to wait until mysql database has started (it takes some seconds to start)
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        #os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
+        resolver:
+        #- nightly
+        - lts-18
+        - lts-16
+        - lts-14
+
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v2
+
+      - name: Build and run tests
+        shell: bash
+        run: |
+            set -ex
+            stack upgrade
+            stack --version
+            stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
