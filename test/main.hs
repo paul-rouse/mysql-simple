@@ -6,11 +6,6 @@ import Database.MySQL.Simple
 import Database.MySQL.Simple.Param
 import Test.Hspec
 import Blaze.ByteString.Builder (toByteString)
-#if MIN_VERSION_base(4,8,2)
-#else
-import Control.Applicative
-import Data.Monoid
-#endif
 
 -- This is how to connect to our test database
 testConn :: ConnectInfo
