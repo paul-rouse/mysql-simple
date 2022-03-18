@@ -1,26 +1,38 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
 
+import Control.Applicative   ((<|>))
 import Control.Exception (bracket)
 import Data.Text (Text)
 import Database.MySQL.Simple
 import Database.MySQL.Simple.Param
+import System.Environment    (getEnvironment)
 import Test.Hspec
 import Blaze.ByteString.Builder (toByteString)
 
+isCI :: IO Bool
+isCI = do
+    env <- getEnvironment
+    return $ case lookup "TRAVIS" env <|> lookup "CI" env of
+               Just "true" -> True
+               _ -> False
+
 -- This is how to connect to our test database
-testConn :: ConnectInfo
-testConn = defaultConnectInfo {
-               connectHost     = "127.0.0.1",
-               connectUser     = "test",
-               connectDatabase = "test"
-           }
+testConn :: Bool -> ConnectInfo
+testConn ci = defaultConnectInfo {
+                connectHost     = "127.0.0.1"
+              , connectUser     = "test"
+              , connectPassword = "test"
+              , connectDatabase = "test"
+              , connectPort     = if ci then 33306 else 3306
+              }
 
 main :: IO ()
-main =
-  bracket (connect testConn) close $ \conn ->
-    hspec $ do
-      unitSpec
-      integrationSpec conn
+main = do
+    ci <- isCI
+    bracket (connect $ testConn ci) close $ \conn ->
+      hspec $ do
+        unitSpec
+        integrationSpec conn
 
 unitSpec :: Spec
 unitSpec = do
