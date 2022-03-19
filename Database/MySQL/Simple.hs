@@ -80,6 +80,7 @@ module Database.MySQL.Simple
     -- * Helper functions
     , formatMany
     , formatQuery
+    , splitQuery
     ) where
 
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
@@ -88,6 +89,7 @@ import Control.Applicative ((<$>), pure)
 import Control.Exception (Exception, bracket, onException, throw, throwIO)
 import Control.Monad.Fix (fix)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BS
 import Data.Int (Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend, mconcat)
@@ -169,17 +171,46 @@ formatMany conn q@(Query template) qs = do
         [caseless]
 
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
-buildQuery conn q template xs = zipParams (split template) <$> mapM sub xs
+buildQuery conn q template xs = zipParams queryFragments <$> mapM sub xs
   where sub (Plain b)  = pure b
         sub (Escape s) = (inQuotes . fromByteString) <$> Base.escape conn s
         sub (Many ys)  = mconcat <$> mapM sub ys
-        split s = fromByteString h : if B.null t then [] else split (B.tail t)
-            where (h,t) = B.break (=='?') s
         zipParams (t:ts) (p:ps) = t `mappend` p `mappend` zipParams ts ps
         zipParams [t] []        = t
-        zipParams _ _ = fmtError (show (B.count '?' template) ++
+        zipParams _ _ = fmtError (show fragmentCount ++
                                   " '?' characters, but " ++
                                   show (length xs) ++ " parameters") q xs
+        fragmentCount = length queryFragments - 1
+        queryFragments = splitQuery template
+
+-- | Split a query into fragments separated by @?@ characters. Does not
+-- break a fragment if the question mark is in a string literal.
+splitQuery :: ByteString -> [Builder]
+splitQuery s =
+  reverse $ fmap (fromByteString . BS.pack . reverse) $
+    begin [] (BS.unpack s)
+  where
+  begin = normal []
+
+  normal ret acc [] =
+    acc : ret
+  normal ret acc (c : cs) =
+    case c of
+      '?' ->
+        normal (acc : ret) [] cs
+      '\'' ->
+        quotes ret (c : acc) cs
+      _ ->
+        normal ret (c : acc) cs
+
+  quotes ret acc [] =
+    acc : ret
+  quotes ret acc (c : cs) =
+    case c of
+      '\'' ->
+        normal ret (c : acc) cs
+      _ ->
+        quotes ret (c : acc) cs
 
 -- | Execute an @INSERT@, @UPDATE@, or other SQL query that is not
 -- expected to return results.
@@ -373,7 +404,7 @@ fmtError msg q xs = throw FormatError {
 -- facility to address both ease of use and security.
 
 -- $querytype
--- 
+--
 -- A 'Query' is a @newtype@-wrapped 'ByteString'. It intentionally
 -- exposes a tiny API that is not compatible with the 'ByteString'
 -- API; this makes it difficult to construct queries from fragments of
