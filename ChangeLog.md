@@ -1,3 +1,7 @@
+## 0.4.7.2
+
+* Fix question marks in string literals causing substitution errors (https://github.com/paul-rouse/mysql-simple/pull/54)
+
 ## 0.4.7.1
 
 * Use parseTimeM from Data.Time.Format instead of parseTime (https://github.com/paul-rouse/mysql-simple/pull/53)
