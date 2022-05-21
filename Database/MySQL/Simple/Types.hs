@@ -17,6 +17,7 @@ module Database.MySQL.Simple.Types
     , In(..)
     , VaArgs(..)
     , Binary(..)
+    , JSON(..)
     , Query(..)
     ) where
 
@@ -120,4 +121,8 @@ newtype VaArgs a = VaArgs a
 
 -- | Wrap a mostly-binary string to be escaped in hexadecimal.
 newtype Binary a = Binary a
+    deriving (Eq, Ord, Read, Show, Typeable, Functor)
+
+-- | Wrap a JSON value.
+newtype JSON a = JSON { fromJSON :: a }
     deriving (Eq, Ord, Read, Show, Typeable, Functor)

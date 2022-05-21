@@ -31,6 +31,8 @@ module Database.MySQL.Simple.Result
 
 import Control.Applicative ((<$>), (<*>), (<*), pure)
 import Control.Exception (Exception, throw)
+import Data.Aeson (FromJSON)
+import qualified Data.Aeson as Aeson
 import Data.Attoparsec.ByteString.Char8 hiding (Result)
 import Data.Bits ((.&.), (.|.), shiftL)
 import Data.ByteString (ByteString)
@@ -44,6 +46,7 @@ import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Database.MySQL.Base.Types (Field(..), Type(..))
+import Database.MySQL.Simple.Types (JSON(..))
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy as LB
@@ -186,6 +189,13 @@ instance Result TimeOfDay where
                   Just t -> t
                   _      -> conversionFailed f "TimeOfDay" "could not parse"
         where ok = mkCompats [Time]
+
+instance (Typeable a, FromJSON a) => Result (JSON a) where
+    convert f = doConvert f ok $ \bs ->
+                case Aeson.eitherDecodeStrict' bs of
+                  Right a -> JSON a
+                  Left err -> conversionFailed f "JSON" err
+        where ok = mkCompats [Json]
 
 isText :: Field -> Bool
 isText f = fieldCharSet f /= 63

@@ -21,6 +21,8 @@ module Database.MySQL.Simple.Param
 import Blaze.ByteString.Builder (Builder, fromByteString, fromLazyByteString,
                                  toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
+import Data.Aeson (ToJSON)
+import qualified Data.Aeson as Aeson
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as L16
@@ -35,7 +37,7 @@ import Data.Time.Format (formatTime)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Null)
+import Database.MySQL.Simple.Types (Binary(..), JSON(..), In(..), VaArgs(..), Null)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Utf8
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Lazy as LB
@@ -109,6 +111,9 @@ instance Param (Binary LB.ByteString) where
     render (Binary bs) = Plain $ fromByteString "x'" `mappend`
                                  fromLazyByteString (L16.encode bs) `mappend`
                                  fromChar '\''
+
+instance ToJSON a => Param (JSON a) where
+    render (JSON a) = Escape $ LB.toStrict $ Aeson.encode a
 
 renderNull :: Action
 renderNull = Plain (fromByteString "null")

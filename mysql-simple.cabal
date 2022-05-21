@@ -44,6 +44,7 @@ library
     Database.MySQL.Internal.Blaze
 
   build-depends:
+    aeson,
     attoparsec >= 0.10.0.0,
     base < 5,
     base16-bytestring,
