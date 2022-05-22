@@ -50,6 +50,7 @@ module Database.MySQL.Simple
     , In(..)
     , VaArgs(..)
     , Binary(..)
+    , JSON(..)
     , Only(..)
     -- ** Exceptions
     , FormatError(fmtMessage, fmtQuery, fmtParams)
@@ -100,7 +101,7 @@ import Database.MySQL.Simple.Param (Action(..), inQuotes)
 import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
 import Database.MySQL.Simple.Result (ResultError(..))
-import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Only(..), Query(..))
+import Database.MySQL.Simple.Types (Binary(..), JSON(..), In(..), VaArgs(..), Only(..), Query(..))
 import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
 import qualified Database.MySQL.Base as Base
