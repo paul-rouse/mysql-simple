@@ -123,6 +123,6 @@ newtype VaArgs a = VaArgs a
 newtype Binary a = Binary a
     deriving (Eq, Ord, Read, Show, Typeable, Functor)
 
--- | Wrap a JSON value.
+-- | Wrap a value to be used as JSON.
 newtype JSON a = JSON { fromJSON :: a }
     deriving (Eq, Ord, Read, Show, Typeable, Functor)
