@@ -81,6 +81,8 @@ test-suite test
     type:            exitcode-stdio-1.0
     main-is:         main.hs
     hs-source-dirs:  test
+    other-modules:   Common
+                     DateTimeSpec
     ghc-options:     -Wall
     default-language: Haskell2010
     build-depends:   base                    >= 4 && < 5
@@ -89,6 +91,7 @@ test-suite test
                    , hspec
                    , mysql-simple
                    , text
+                   , time
 
 source-repository head
   type:     git

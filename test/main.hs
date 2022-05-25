@@ -1,9 +1,5 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
 
-
-{-# options_ghc -fno-warn-orphans #-}
-
-import Data.ByteString.Builder as BS
 import Control.Applicative   ((<|>))
 import Control.Exception (bracket)
 import Data.Text (Text)
@@ -12,6 +8,9 @@ import Database.MySQL.Simple.Param
 import System.Environment    (getEnvironment)
 import Test.Hspec
 import Blaze.ByteString.Builder (toByteString)
+
+import Common                       ()
+import DateTimeSpec                 (dateTimeUnit, dateTimeSpec)
 
 isCI :: IO Bool
 isCI = do
@@ -30,13 +29,26 @@ testConn ci = defaultConnectInfo {
               , connectPort     = if ci then 33306 else 3306
               }
 
-main :: IO ()
-main = do
+-- Allow tests to do things which would be prevented in strict SQL mode
+withConnection :: (Connection -> IO()) -> IO()
+withConnection action = do
     ci <- isCI
-    bracket (connect $ testConn ci) close $ \conn ->
+    bracket (do  conn <- connect $ testConn ci
+                 _ <- execute_ conn "set session sql_mode=''"
+                 return conn
+            )
+            close
+            action
+
+main :: IO ()
+main =
+    withConnection $ \conn ->
       hspec $ do
         describe "Database.MySQL.Simple.unitSpec" unitSpec
         describe "Database.MySQL.Simple.integrationSpec" $ integrationSpec conn
+        describe "Database.MySQL.Simple.DateTimeSpec" $ do
+          dateTimeUnit
+          dateTimeSpec conn
 
 unitSpec :: Spec
 unitSpec = do
@@ -70,12 +82,6 @@ unitSpec = do
       splitQuery "select ? + ? + what from foo where bar = ?"
         `shouldBe`
           ["select ", " + ", " + what from foo where bar = ", ""]
-
-instance Show BS.Builder where
-  show = show . BS.toLazyByteString
-
-instance Eq BS.Builder where
-  a == b = BS.toLazyByteString a == BS.toLazyByteString b
 
 integrationSpec :: Connection -> Spec
 integrationSpec conn = do
