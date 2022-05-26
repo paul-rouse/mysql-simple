@@ -36,6 +36,7 @@ jobs:
         os: [ubuntu-latest]
         resolver:
         #- nightly
+        - lts-19
         - lts-18
         - lts-16
         - lts-14
