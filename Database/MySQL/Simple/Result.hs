@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances, OverloadedStrings #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving, DefaultSignatures #-}
 #if MIN_VERSION_time(1,5,0)
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 #endif
@@ -22,8 +23,8 @@
 -- two are /not/ considered compatible.
 
 module Database.MySQL.Simple.Result
-    (
-      Result(..)
+    ( FromField(..)
+    , Result(..)
     , ResultError(..)
     ) where
 
@@ -39,7 +40,7 @@ import Data.List (foldl')
 import Data.Ratio (Ratio)
 import Data.Time.Calendar (Day, fromGregorian)
 import Data.Time.Clock (UTCTime(..))
-import Data.Time.Format (parseTimeM)
+import Data.Time.Format (parseTimeM, ParseTime)
 import Data.Time.LocalTime (TimeOfDay, makeTimeOfDayValid)
 import Data.Typeable (TypeRep, Typeable, typeOf)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
@@ -82,12 +83,43 @@ data ResultError = Incompatible { errSQLType :: String
 
 instance Exception ResultError
 
+-- | A type that can be converted from a 'ByteString'.  Any type which is
+-- an instance of this class, and is 'Typeable', can use the default
+-- implementation of 'Result'.  This provides a method of implementing
+-- a decoder for any text-like column, such as @TEXT@, @BLOB@, or @JSON@,
+-- instead of implementing 'Result' directly.
+--
+-- The first component of the tuple returned by 'fromField' is a list of
+-- acceptable column types, expressed in terms of
+-- 'Database.MySQL.Base.Types.Type'.
+--
+-- @since 0.4.8
+--
+class FromField a where
+    fromField :: ([Type], ByteString -> Either String a)
+
 -- | A type that may be converted from a SQL type.
+--
+-- A default implementation is provided for any type which is an instance
+-- of both 'FromField' and 'Typeable', providing a simple mechanism for
+-- user-defined decoding from text- or blob-like fields (including @JSON@).
+--
 class Result a where
     convert :: Field -> Maybe ByteString -> a
     -- ^ Convert a SQL value to a Haskell value.
     --
     -- Throws a 'ResultError' if conversion fails.
+    --
+    default convert :: (Typeable a, FromField a)
+                       => Field -> Maybe ByteString -> a
+    convert f =
+        doConvert f (mkCompats allowTypes) $ \bs ->
+            case cvt bs of
+              Right x  -> x
+              Left err -> conversionFailed f (show (typeOf (cvt undefined))) err
+        where
+            (allowTypes, cvt) = fromField
+
 
 instance (Result a) => Result (Maybe a) where
     convert _ Nothing = Nothing
@@ -160,15 +192,16 @@ instance Result LT.Text where
 instance Result [Char] where
     convert f = ST.unpack . convert f
 
-instance Result UTCTime where
-    convert f = doConvert f ok $ \bs ->
-                case parseTimeM True defaultTimeLocale "%F %T%Q" (B8.unpack bs) of
-                  Just t -> t
-                  Nothing
-                    | SB.isPrefixOf "0000-00-00" bs ->
-                        UTCTime (fromGregorian 0 0 0) 0
-                    | otherwise -> conversionFailed f "UTCTime" "could not parse"
-        where ok = mkCompats [DateTime,Timestamp]
+instance FromField UTCTime where
+    fromField =
+        ( [DateTime, Timestamp]
+        , \bs -> if "0000-00-00" `SB.isPrefixOf` bs then
+                     -- https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+                     Right $ UTCTime (fromGregorian 0 0 0) 0
+                 else
+                     parseTimeField "%F %T%Q" (B8.unpack bs)
+        )
+instance Result UTCTime
 
 instance Result Day where
     convert f = flip (atto ok) f $ case fieldType f of
@@ -180,12 +213,21 @@ instance Result Day where
                                    <*> (decimal <* char '-')
                                    <*> decimal
 
-instance Result TimeOfDay where
-    convert f = doConvert f ok $ \bs ->
-                case parseTimeM True defaultTimeLocale "%T%Q" (B8.unpack bs) of
-                  Just t -> t
-                  _      -> conversionFailed f "TimeOfDay" "could not parse"
-        where ok = mkCompats [Time]
+instance FromField TimeOfDay where
+    fromField = ([Time], parseTimeField "%T%Q" . B8.unpack)
+instance Result TimeOfDay
+
+-- A specialised version of parseTimeM which builds in the defaults we want,
+-- and produces an Either result.  For the latter provide a wrapper for Either,
+-- local to this module, to add a MonadFail instance.
+--
+newtype Failable a = Failable { failable :: Either String a }
+                     deriving (Functor, Applicative, Monad)
+instance MonadFail Failable where
+    fail err = Failable (Left err)
+
+parseTimeField :: ParseTime t => String -> String -> Either String t
+parseTimeField fmt s = failable $ parseTimeM True defaultTimeLocale fmt s
 
 isText :: Field -> Bool
 isText f = fieldCharSet f /= 63

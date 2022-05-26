@@ -51,6 +51,8 @@ module Database.MySQL.Simple
     , VaArgs(..)
     , Binary(..)
     , Only(..)
+    , Param
+    , Result
     -- ** Exceptions
     , FormatError(fmtMessage, fmtQuery, fmtParams)
     , QueryError(qeMessage, qeQuery)
@@ -81,6 +83,14 @@ module Database.MySQL.Simple
     , formatMany
     , formatQuery
     , splitQuery
+
+    -- | #extension#
+
+    -- * Extension hooks
+    -- $hooks
+
+    , FromField(..)
+    , ToField(..)
     ) where
 
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString)
@@ -94,12 +104,13 @@ import Data.Int (Int64)
 import Data.List (intersperse)
 import Data.Monoid (mappend, mconcat)
 import Data.Typeable (Typeable)
-import Database.MySQL.Base (Connection, Result)
+import Database.MySQL.Base (Connection)
+import qualified Database.MySQL.Base as Base (Result)
 import Database.MySQL.Base.Types (Field)
-import Database.MySQL.Simple.Param (Action(..), inQuotes)
+import Database.MySQL.Simple.Param (ToField(..), Param, Action(..), inQuotes)
 import Database.MySQL.Simple.QueryParams (QueryParams(..))
 import Database.MySQL.Simple.QueryResults (QueryResults(..))
-import Database.MySQL.Simple.Result (ResultError(..))
+import Database.MySQL.Simple.Result (FromField(..), Result, ResultError(..))
 import Database.MySQL.Simple.Types (Binary(..), In(..), VaArgs(..), Only(..), Query(..))
 import Text.Regex.PCRE.Light (compile, caseless, match)
 import qualified Data.ByteString.Char8 as B
@@ -358,7 +369,7 @@ finishFold conn q z0 f = withResult (Base.useResult conn) q $ \r fs ->
       [] -> return z
       _  -> (f z $! convertResults fs row) >>= loop
 
-withResult :: (IO Result) -> Query -> (Result -> [Field] -> IO a) -> IO a
+withResult :: (IO Base.Result) -> Query -> (Base.Result -> [Field] -> IO a) -> IO a
 withResult fetchResult q act = bracket fetchResult Base.freeResult $ \r -> do
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
@@ -663,3 +674,27 @@ fmtError msg q xs = throw FormatError {
 --   UTF-8. If you use some other encoding, decoding may fail or give
 --   wrong results. In such cases, write a @newtype@ wrapper and a
 --   custom 'Result' instance to handle your encoding.
+--
+-- When a user-defined type is represented by a @TEXT@, @BLOB@, @JSON@, or
+-- similar type of column, it can be encoded and decoded using
+-- hooks which take or receive a 'ByteString'.  See the classes 'ToField'
+-- and 'FromField' in the [Extension hooks](#extension) section below.
+
+-- $hooks
+--
+-- These classes provide a simple mechanism for encoding and decoding
+-- user-defined types in cases where the underlying encoding is a
+-- sequence of bytes.
+--
+-- === __Example__
+--
+-- Assuming @Foo@ has instances of 'Data.Aeson.FromJSON', 'Data.Aeson.ToJSON',
+-- and 'Typeable', its decoding and encoding can be specified like this:
+--
+-- > instance FromField Foo where
+-- >     fromField = ([Database.MySQL.Base.Types.Json], Data.Aeson.eitherDecodeStrict')
+-- > instance Result Foo
+-- >
+-- > instance ToField Foo where
+-- >     toField = Data.ByteString.Lazy.toStrict . Data.Aeson.encode
+-- > instance Param Foo

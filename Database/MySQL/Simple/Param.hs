@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, DeriveFunctor, FlexibleInstances,
-    OverloadedStrings #-}
+    OverloadedStrings, DefaultSignatures #-}
 
 -- |
 -- Module:      Database.MySQL.Simple.Param
@@ -12,8 +12,8 @@
 -- The 'Param' typeclass, for rendering a parameter to a SQL query.
 
 module Database.MySQL.Simple.Param
-    (
-      Action(..)
+    ( Action(..)
+    , ToField(..)
     , Param(..)
     , inQuotes
     ) where
@@ -71,10 +71,28 @@ instance Show Action where
     show (Escape b) = "Escape " ++ show b
     show (Many b)   = "Many " ++ show b
 
+-- | A type that can be converted to a 'ByteString' for use as a parameter
+-- to an SQL query.
+--
+-- Any type which is an instance of this class can use the default
+-- implementation of 'Param', which will wrap encodings with 'Escape'.
+--
+-- @since 0.4.8
+--
+class ToField a where
+    toField :: a -> ByteString
+
 -- | A type that may be used as a single parameter to a SQL query.
+--
+-- A default implementation is provided for any type which is an instance
+-- of 'ToField', providing a simple mechanism for user-defined encoding
+-- to text- or blob-like fields (including @JSON@).
+--
 class Param a where
     render :: a -> Action
     -- ^ Prepare a value for substitution into a query string.
+    default render :: ToField a => a -> Action
+    render = Escape . toField
 
 instance Param Action where
     render a = a

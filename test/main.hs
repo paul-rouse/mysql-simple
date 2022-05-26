@@ -11,6 +11,7 @@ import Blaze.ByteString.Builder (toByteString)
 
 import Common                       ()
 import DateTimeSpec                 (dateTimeUnit, dateTimeSpec)
+import CustomTypeSpec               (customTypeUnit, customTypeSpec)
 
 isCI :: IO Bool
 isCI = do
@@ -49,6 +50,9 @@ main =
         describe "Database.MySQL.Simple.DateTimeSpec" $ do
           dateTimeUnit
           dateTimeSpec conn
+        describe "Database.MySQL.Simple.CustomTypeSpec" $ do
+          customTypeUnit
+          customTypeSpec conn
 
 unitSpec :: Spec
 unitSpec = do
