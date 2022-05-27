@@ -30,6 +30,10 @@ module Database.MySQL.Simple.Result
 
 #include "MachDeps.h"
 
+#if !MIN_VERSION_base(4,13,0)
+import Control.Monad.Fail (MonadFail(..))
+#endif
+
 import Control.Applicative ((<$>), (<*>), (<*), pure)
 import Control.Exception (Exception, throw)
 import Data.Attoparsec.ByteString.Char8 hiding (Result)

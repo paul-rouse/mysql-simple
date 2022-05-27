@@ -45,7 +45,7 @@ library
 
   build-depends:
     attoparsec >= 0.10.0.0,
-    base < 5,
+    base >= 4.9 && < 5,
     base16-bytestring,
     blaze-builder,
     bytestring >= 0.9,
