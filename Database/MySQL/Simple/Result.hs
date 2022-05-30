@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances, OverloadedStrings #-}
-{-# LANGUAGE GeneralisedNewtypeDeriving, DefaultSignatures #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DefaultSignatures #-}
 #if MIN_VERSION_time(1,5,0)
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 #endif
