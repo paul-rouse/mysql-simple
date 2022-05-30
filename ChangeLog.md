@@ -1,3 +1,7 @@
+## 0.4.8.1
+
+* Allow build on ghc 8.4.x (https://github.com/paul-rouse/mysql-simple/pull/56)
+
 ## 0.4.8
 
 * Provide classes to simplify user-defined encoding and decoding of columns.
