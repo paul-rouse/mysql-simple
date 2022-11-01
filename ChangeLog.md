@@ -1,3 +1,7 @@
+## 0.4.9
+
+* Additional tuple instances of QueryParams (https://github.com/paul-rouse/mysql-simple/pull/57)
+
 ## 0.4.8.1
 
 * Allow build on ghc 8.4.x (https://github.com/paul-rouse/mysql-simple/pull/56)
