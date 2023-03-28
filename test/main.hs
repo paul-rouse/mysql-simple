@@ -21,6 +21,11 @@ isCI = do
                _ -> False
 
 -- This is how to connect to our test database
+--
+-- @
+-- CREATE USER test@localhost IDENTIFIED BY 'test';
+-- GRANT ALL PRIVILEGES ON test.* TO test@localhost;
+-- @
 testConn :: Bool -> ConnectInfo
 testConn ci = defaultConnectInfo {
                 connectHost     = "127.0.0.1"

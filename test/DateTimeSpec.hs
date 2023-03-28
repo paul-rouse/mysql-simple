@@ -18,7 +18,7 @@ import Common                       ()
 -- An arbitrary date and time: 2022-05-25 13:09:34.375 UTC
 testTime :: UTCTime
 testTime = UTCTime (ModifiedJulianDay 59724)
-                   (realToFrac $ (378995 % 8 :: Rational))
+                   (realToFrac (378995 % 8 :: Rational))
 
 testYear :: Day
 testYear =

@@ -64,6 +64,6 @@ customTypeSpec conn =
       describe "writing a custom type" $ do
         it "should work with parameter substitution" $ do
           _ <- execute conn "insert into custom (i,c) values (?,?)"
-                            ((3::Int), Latin "nuntium")
+                            (3::Int, Latin "nuntium")
           result <- query_ conn "select c from custom where i = 3"
           result `shouldBe` [Only (Latin "nuntium")]

@@ -180,13 +180,13 @@ instance Result (Ratio Integer) where
                               Long,LongLong]
 
 instance Result SB.ByteString where
-    convert f = doConvert f okText $ id
+    convert f = doConvert f okText id
 
 instance Result LB.ByteString where
     convert f = LB.fromChunks . (:[]) . convert f
 
 instance Result ST.Text where
-    convert f | isText f  = doConvert f okText $ ST.decodeUtf8
+    convert f | isText f  = doConvert f okText ST.decodeUtf8
               | otherwise = incompatible f (typeOf ST.empty)
                             "attempt to mix binary and text"
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, DeriveFunctor, FlexibleInstances,
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances,
     OverloadedStrings, DefaultSignatures #-}
 
 -- |

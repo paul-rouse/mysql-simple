@@ -3,7 +3,7 @@ version:        0.4.9
 homepage:       https://github.com/paul-rouse/mysql-simple
 bug-reports:    https://github.com/paul-rouse/mysql-simple/issues
 synopsis:       A mid-level MySQL client library.
-description:    
+description:
     A mid-level client library for the MySQL database, intended to be
     fast and easy to use.
     .
@@ -52,7 +52,6 @@ library
     containers,
     mysql >= 0.1.7,
     pcre-light,
-    old-locale,
     text >= 0.11.0.2,
     time >= 1.5
   if !impl(ghc >= 8.0)

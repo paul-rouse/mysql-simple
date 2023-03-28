@@ -184,7 +184,7 @@ formatMany conn q@(Query template) qs = do
 buildQuery :: Connection -> Query -> ByteString -> [Action] -> IO Builder
 buildQuery conn q template xs = zipParams queryFragments <$> mapM sub xs
   where sub (Plain b)  = pure b
-        sub (Escape s) = (inQuotes . fromByteString) <$> Base.escape conn s
+        sub (Escape s) = inQuotes . fromByteString <$> Base.escape conn s
         sub (Many ys)  = mconcat <$> mapM sub ys
         zipParams (t:ts) (p:ps) = t `mappend` p `mappend` zipParams ts ps
         zipParams [t] []        = t
@@ -198,8 +198,7 @@ buildQuery conn q template xs = zipParams queryFragments <$> mapM sub xs
 -- break a fragment if the question mark is in a string literal.
 splitQuery :: ByteString -> [Builder]
 splitQuery s =
-  reverse $ fmap (fromByteString . BS.pack . reverse) $
-    begin [] (BS.unpack s)
+  reverse $ fromByteString . BS.pack . reverse <$> begin [] (BS.unpack s)
   where
   begin = normal []
 
@@ -369,7 +368,7 @@ finishFold conn q z0 f = withResult (Base.useResult conn) q $ \r fs ->
       [] -> return z
       _  -> (f z $! convertResults fs row) >>= loop
 
-withResult :: (IO Base.Result) -> Query -> (Base.Result -> [Field] -> IO a) -> IO a
+withResult :: IO Base.Result -> Query -> (Base.Result -> [Field] -> IO a) -> IO a
 withResult fetchResult q act = bracket fetchResult Base.freeResult $ \r -> do
   ncols <- Base.fieldCount (Right r)
   if ncols == 0
